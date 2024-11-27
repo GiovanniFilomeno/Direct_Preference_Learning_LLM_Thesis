@@ -1,5 +1,12 @@
 import unittest
 import numpy as np
+import os
+import sys
+
+module_path = os.path.abspath("../src")
+if module_path not in sys.path:
+    sys.path.append(module_path)
+
 from maze_env import MazeEnv, draw_map
 from maze import Maze
 import matplotlib.pyplot as plt
@@ -14,9 +21,9 @@ class TestMazeEnv(unittest.TestCase):
         maze = Maze(10, 10, 0, 0) # inizilizzazione del labirinto 10x10 dimensione e 0-0 punto iniziale
 
         # inizializza l'ambiente: sz=10 (dimensione griglia), start/goal sono le posizioni iniziali e finali 
-        self.env = MazeEnv(sz=10, maze=maze, start=np.array([0.0, 0.0]), goal=np.array([0.75, 0.75]),
-                 reward="distance", log=False, eval=False, dt=0.1, horizon=50, 
-                 wall_penalty=10, slide=1, image_freq=20) 
+        self.env = MazeEnv(sz=10, maze=maze, start=np.array([0.15, 0.15]), goal=np.array([0.45, 0.70]),
+                 reward="distance", log=False, eval=False, dt=0.1, horizon=70, 
+                 wall_penalty=10, slide=1, image_freq=100) 
         self.env.reset()
 
     def test_step(self):
@@ -72,45 +79,49 @@ class TestMazeEnv(unittest.TestCase):
         self.assertIsInstance(infos, dict)
 
     def test_record_video(self):
-        # Test recording a video of the agent interacting with the environment
+        # Assicurati che la directory video esista
+        video_dir = os.path.join(os.path.dirname(__file__), 'video')
+        os.makedirs(video_dir, exist_ok=True)
+
+        print(f"Directory created or already existing: {video_dir}")
+
+
         fig, ax = plt.subplots()
         ims = []
 
         self.env.reset()
         for i in range(1000):
-            # Random Action
+            # Azione casuale
             action = np.random.uniform(-1, 1, size=(2,))
-            # Fixed Action
-#            action = np.array([1, 0.5])
             state, reward, done, truncated, infos = self.env.step(action)
-#            print(state)
+
+            # Disegna mappa
             maps = draw_map(1 / self.env.sz, self.env.maze)
             if self.env.Z is None:
-                self.env.Z = self.env.reward_fn.compute_reward(self.env.points)  # negating reward to standardize plot
+                self.env.Z = self.env.reward_fn.compute_reward(self.env.points)  # Negate per standardizzare
+
             maps.append(plt.contourf(self.env.X, self.env.Y, self.env.Z, 30, cmap='viridis_r'))
 
-            # if self.env.Z is None:
-            #     self.env.Z = self.env.reward_fn.compute_reward(self.env.points)  # negating reward to standardize plot            
-#            plt.contourf(self.env.X, self.env.Y, self.env.Z, 30, cmap='viridis_r')
-            # plot on top of the countour plot and return the image
+            # Scatter plot per lo stato
             im = plt.scatter(state[0], state[1], c='r')
-            # save the image to a folder
-            im.figure.savefig(f'tests/video/state_{i}.png')
-
-#            im = ax.scatter(state[0], state[1], c='r')
+            im.figure.savefig(os.path.join(video_dir, f'state_{i}.png'))
             ims.append([im])
             if done or truncated:
                 break
-        
 
-        # Create an animation from stored images
+        # Creare l'animazione dalle immagini salvate
         images = []
         for i in range(len(ims)):
-            images.append(imageio.imread(f'tests/video/state_{i}.png'))
-        imageio.mimsave('agent_interaction.gif', images, fps=30)
-        # remove all the images
+            images.append(imageio.v2.imread(os.path.join(video_dir, f'state_{i}.png')))
+        imageio.mimsave('agent_interaction_fail.gif', images, duration=33)  # Usa `duration` invece di `fps`
+
+        # Rimuovere le immagini salvate
         for i in range(len(ims)):
-            os.remove(f'tests/video/state_{i}.png')
+            os.remove(os.path.join(video_dir, f'state_{i}.png'))
+
+        # Rimuovi la directory `video` se vuota
+        os.rmdir(video_dir)
+
 
 
     

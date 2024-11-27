@@ -18,10 +18,14 @@ def line(x1, x2, y1, y2, alpha, scale, ax):
 
 def intersect(p1, p2, q1, q2):
     # Checks if line between p1,p2 intersects one between q1,q2
-    cp1 = np.cross(p2 - p1, q1 - p2)
-    cp2 = np.cross(p2 - p1, q2 - p2)
-    cp3 = np.cross(q2 - q1, p1 - q2)
-    cp4 = np.cross(q2 - q1, p2 - q2)
+    # cp1 = np.cross(p2 - p1, q1 - p2)
+    # cp2 = np.cross(p2 - p1, q2 - p2)
+    # cp3 = np.cross(q2 - q1, p1 - q2)
+    # cp4 = np.cross(q2 - q1, p2 - q2)
+    cp1 = np.cross(np.pad(p2 - p1, (0, 1), 'constant'), np.pad(q1 - p2, (0, 1), 'constant'))
+    cp2 = np.cross(np.pad(p2 - p1, (0, 1), 'constant'), np.pad(q2 - p2, (0, 1), 'constant'))
+    cp3 = np.cross(np.pad(q2 - q1, (0, 1), 'constant'), np.pad(p1 - q2, (0, 1), 'constant'))
+    cp4 = np.cross(np.pad(q2 - q1, (0, 1), 'constant'), np.pad(p2 - q2, (0, 1), 'constant'))
     t1 = np.dot(cp1, cp2)
     t2 = np.dot(cp3, cp4)
     if t1 < 0 and t2 < 0:
@@ -148,10 +152,12 @@ class MazeEnv(Env):
         self.horizon = horizon
         npoints = 25
 
-        if maze:
-            self.maze = maze
-        else:
-            self.maze.make_maze()
+        # if maze:
+        #     self.maze = maze
+        # else:
+        #     self.maze.make_maze()
+        
+        self.maze.make_maze_fail()
 
         self.worldlines = generate_world(1 / self.sz, self.maze)
         self.state = np.array(start)
@@ -178,6 +184,8 @@ class MazeEnv(Env):
         # Logs scatter map with final position
         # TODO need to move logging to logcallback
         # print("Resetting env!\n",self.state,self.cur_return)
+        print(f"Resetting environment. Previous state: {self.state}, Counter: {self.counter}")
+
         self.episode_counter += 1
         if self.log and not self.eval:
             # Only for training envs. Will not run in test envs. (eval is default false for envs)
@@ -236,6 +244,8 @@ class MazeEnv(Env):
     def step(self, action):
         # action must be a vector. Does not support batching
         # Automatically clips action to avoid bad inputs
+        print(f"Step called. Counter: {self.counter}, Horizon: {self.horizon}")
+
         action = np.clip(action, -1, 1)
         self.counter += 1  # incrementing step counter
         infos = {"A": 1.0}  # dummy infos
