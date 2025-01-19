@@ -44,51 +44,65 @@ class Maze:
         self.grid[self.ny - 1][0].walls["S"] = True
 
     def make_maze_fail(self):
-        # Initialize the grid with walls
-        grid = np.ones((self.ny, self.nx))  # 1 represents walls, 0 represents paths
+        """
+        Crea un labirinto a serpentina con confini esterni chiusi.
+        L'agente parte da (0,0) in alto a sinistra e arriva a (nx-1, ny-1) in basso a destra.
+        """
+        nx = self.nx
+        ny = self.ny
 
-        # Create a complex path
-        # Open a winding path through the grid
-        grid[1:9, 1] = 0  # Vertical passage
-        grid[8, 1:5] = 0  # Horizontal passage
-        grid[4:8, 4] = 0  # Another vertical passage
-        grid[4, 2:4] = 0  # Horizontal connection
-
-        # Add a concave obstacle
-        grid[5, 3:6] = 1  # Base of the obstacle
-        grid[6, 5] = 1    # Concave part
-
-        # Add additional obstacles to make the maze complex
-        grid[2:4, 3] = 1  # Vertical block
-        grid[6:8, 2] = 1  # Vertical block near the passage
-
-        # Initialize walls for all cells
-        for y in range(self.ny):
-            for x in range(self.nx):
+        # 1) Chiudi tutte le celle (tutti i muri = True)
+        for y in range(ny):
+            for x in range(nx):
                 self.grid[y][x].walls = {"N": True, "S": True, "E": True, "W": True}
 
-        # Update walls based on grid
-        for y in range(self.ny):
-            for x in range(self.nx):
-                if grid[y, x] == 0:
-                    # Open walls to adjacent path cells
-                    if y > 0 and grid[y - 1, x] == 0:
-                        self.grid[y][x].walls["N"] = False
-                        self.grid[y - 1][x].walls["S"] = False
-                    if y < self.ny - 1 and grid[y + 1, x] == 0:
-                        self.grid[y][x].walls["S"] = False
-                        self.grid[y + 1][x].walls["N"] = False
-                    if x > 0 and grid[y, x - 1] == 0:
-                        self.grid[y][x].walls["W"] = False
-                        self.grid[y][x - 1].walls["E"] = False
-                    if x < self.nx - 1 and grid[y, x + 1] == 0:
-                        self.grid[y][x].walls["E"] = False
-                        self.grid[y][x + 1].walls["W"] = False
+        # 2) Crea un percorso "a serpentina" attraverso la griglia
+        #    Riga pari (y%2==0): apri da x=0 a x=nx-1
+        #    Riga dispari (y%2==1): apri da x=nx-1 a x=0
+        #    E alla fine di ogni riga, apri un passaggio verso la riga successiva.
+        for row in range(ny):
+            if row % 2 == 0:
+                # Riga pari => apri in orizzontale da sinistra (0) a destra (nx-1)
+                for x in range(nx - 1):
+                    self.grid[row][x].walls["E"] = False
+                    self.grid[row][x + 1].walls["W"] = False
+                # Se non siamo all'ultima riga, apri un passaggio giù (S)
+                if row < ny - 1:
+                    self.grid[row][nx - 1].walls["S"] = False
+                    self.grid[row + 1][nx - 1].walls["N"] = False
+            else:
+                # Riga dispari => apri in orizzontale da destra (nx-1) a sinistra (0)
+                for x in range(nx - 1, 0, -1):
+                    self.grid[row][x].walls["W"] = False
+                    self.grid[row][x - 1].walls["E"] = False
+                # Se non siamo all'ultima riga, apri un passaggio giù (S)
+                if row < ny - 1:
+                    self.grid[row][0].walls["S"] = False
+                    self.grid[row + 1][0].walls["N"] = False
 
-        # Optionally, set the starting cell to have no walls
-        self.grid[self.iy][self.ix].walls = {"N": False, "S": False, "E": False, "W": False}
+        # 3) Ora chiudiamo "davvero" il perimetro esterno (il bounding box)
+        #    in modo che l'agente non possa scappare fuori.
+        for x in range(nx):
+            self.grid[0][x].walls["N"]       = True  # riga in alto
+            self.grid[ny - 1][x].walls["S"]  = True  # riga in basso
+        for y in range(ny):
+            self.grid[y][0].walls["W"]       = True  # colonna sinistra
+            self.grid[y][nx - 1].walls["E"]  = True  # colonna destra
 
-    
+        # 4) Sblocca un po' i muri delle celle di start e goal
+        #    ma lasciando comunque chiuso il perimetro in corrispondenza del bordo.
+        #    Start: (0,0) in alto a sinistra
+        self.grid[0][0].walls["N"] = True   # confine alto
+        self.grid[0][0].walls["W"] = True   # confine sinistra
+        self.grid[0][0].walls["E"] = False  # si può andare a destra
+        self.grid[0][0].walls["S"] = False  # si può andare in basso
+
+        #    Goal: (nx-1, ny-1) in basso a destra
+        self.grid[ny - 1][nx - 1].walls["N"] = False
+        self.grid[ny - 1][nx - 1].walls["W"] = False
+        self.grid[ny - 1][nx - 1].walls["S"] = True   # confine in basso
+        self.grid[ny - 1][nx - 1].walls["E"] = True   # confine a destra
+
 
 
     def cell_at(self, x, y):

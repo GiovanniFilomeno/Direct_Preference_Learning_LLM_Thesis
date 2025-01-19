@@ -11,42 +11,54 @@ import time
 random.seed(1)
 
 
+def cross2d(a, b):
+    """Ritorna lo scalare della cross 2D: a.x*b.y - a.y*b.x."""
+    return a[0]*b[1] - a[1]*b[0]
+
 def line(x1, x2, y1, y2, alpha, scale, ax):
     # Plots a line between scaled x1,y1 and x2,y2 with opacity alpha.
-    return ax.plot(np.array([x1 * scale, x2 * scale]), np.array([y1 * scale, y2 * scale]), 'k-', alpha)
-
+    return ax.plot(np.array([x1 * scale, x2 * scale]),
+                   np.array([y1 * scale, y2 * scale]), 
+                   'k-', alpha=alpha)
 
 def intersect(p1, p2, q1, q2):
-    # Checks if line between p1,p2 intersects one between q1,q2
-    # cp1 = np.cross(p2 - p1, q1 - p2)
-    # cp2 = np.cross(p2 - p1, q2 - p2)
-    # cp3 = np.cross(q2 - q1, p1 - q2)
-    # cp4 = np.cross(q2 - q1, p2 - q2)
-    cp1 = np.cross(np.pad(p2 - p1, (0, 1), 'constant'), np.pad(q1 - p2, (0, 1), 'constant'))
-    cp2 = np.cross(np.pad(p2 - p1, (0, 1), 'constant'), np.pad(q2 - p2, (0, 1), 'constant'))
-    cp3 = np.cross(np.pad(q2 - q1, (0, 1), 'constant'), np.pad(p1 - q2, (0, 1), 'constant'))
-    cp4 = np.cross(np.pad(q2 - q1, (0, 1), 'constant'), np.pad(p2 - q2, (0, 1), 'constant'))
-    t1 = np.dot(cp1, cp2)
-    t2 = np.dot(cp3, cp4)
+    """
+    Checks if line segment p1->p2 intersects line segment q1->q2 (2D).
+    Usa la cross in 2D (scalare) al posto di np.cross con padding.
+    """
+    # cross fra (p2-p1) e (q1-p2) etc., tutti scalari
+    cp1 = cross2d(p2 - p1, q1 - p2)
+    cp2 = cross2d(p2 - p1, q2 - p2)
+    cp3 = cross2d(q2 - q1, p1 - q2)
+    cp4 = cross2d(q2 - q1, p2 - q2)
+
+    # t1 = segno di cp1 * cp2
+    # t2 = segno di cp3 * cp4
+    t1 = cp1 * cp2
+    t2 = cp3 * cp4
+
     if t1 < 0 and t2 < 0:
-        # If both end points of both lines are on either sides of the other line
-        # the lines certainly intersect
+        # se i segmenti 'strisciano' uno sull'altro, si intersecano
         return True
     elif t1 > 0 or t2 > 0:
-        # If either of the lines end points are on the same side of the other
-        # they definitely do not intersect
+        # Non si intersecano
         return False
     else:
-        # Now for the equal to zero cases, as we cannot use cross product to test.
-        # We know one of the end points is collinear to the other line.
-        # i.e. 1 triplet out of 4 choices is collinear
-        # Thus checking all 4 pairs along with corresponding cross product
-        # zero cross product => collinear, along with -ve dot product => intersects!.
-        if (np.dot(p1 - q1, p2 - q1) < 0 and cp1 == 0) or (np.dot(p1 - q2, p2 - q2) < 0 and cp2 == 0) \
-                or (np.dot(q1 - p1, q2 - p1) < 0 and cp3 == 0) or (np.dot(q1 - p2, q2 - p2) < 0 and cp4 == 0):
+        # Ora gestiamo il caso in cui cp1, cp2, cp3, cp4 = 0 => collinearità/overlap
+        # Per semplicità, usiamo la logica del codice esistente:
+        # np.dot(...) < 0 e cp1 == 0, ecc. 
+        # Stavolta cp1, cp2, cp3, cp4 sono semplici float
+        dot1 = np.dot(p1 - q1, p2 - q1)
+        dot2 = np.dot(p1 - q2, p2 - q2)
+        dot3 = np.dot(q1 - p1, q2 - p1)
+        dot4 = np.dot(q1 - p2, q2 - p2)
+        # Controllo collinearità
+        if (dot1 < 0 and cp1 == 0) or \
+           (dot2 < 0 and cp2 == 0) or \
+           (dot3 < 0 and cp3 == 0) or \
+           (dot4 < 0 and cp4 == 0):
             return True
         else:
-            # Fails if two of the points perfectly coincide, but probably that's not going to happen frequently.
             return False
         
 
@@ -55,7 +67,6 @@ def generate_world(sz_fac, maze):
     maps = []
     for i in range(maze.nx):
         for j in range(maze.ny):
-            # Flipping north and south as cells are numbered downwards
             if maze.cell_at(i, j).walls['S']:
                 maps.append(np.array([i, i + 1, j + 1, j + 1]) * sz_fac)
             if maze.cell_at(i, j).walls['N']:
@@ -68,100 +79,93 @@ def generate_world(sz_fac, maze):
 
 
 def draw_map(sz_fac, maze, ax=None, alpha=0.5, prints=None):
-    # function to plot environment map
-    # ax contains pre-drawn plot, all lines are plotted on ax
-    if not ax:
+    """
+    Disegna la mappa del maze.
+    Colora in nero le celle 'bloccate' (tutte le pareti True).
+    Ritorna l'axes su cui ha disegnato.
+    """
+    if ax is None:
         ax = plt.gca()
-    maps = []
+
+    # Celle completamente chiuse => rettangolo nero
+    for j in range(maze.ny):
+        for i in range(maze.nx):
+            cell = maze.cell_at(i, j)
+            if all(cell.walls.values()):
+                rect = plt.Rectangle(
+                    (i * sz_fac, j * sz_fac),
+                    sz_fac, sz_fac,
+                    color='black', alpha=1.0
+                )
+                ax.add_patch(rect)
+
+    # Disegno i muri
     for i in range(maze.nx):
         for j in range(maze.ny):
-            # Flipping north and south as cells are numbered downwards
             if maze.cell_at(i, j).walls['S']:
-                maps.append(line(i, i + 1, j + 1, j + 1, alpha, sz_fac, ax))
+                line(i, i + 1, j + 1, j + 1, alpha, sz_fac, ax)
             if maze.cell_at(i, j).walls['N']:
-                maps.append(line(i, i + 1, j, j, alpha, sz_fac, ax))
+                line(i, i + 1, j, j, alpha, sz_fac, ax)
             if maze.cell_at(i, j).walls['E']:
-                maps.append(line(i + 1, i + 1, j, j + 1, alpha, sz_fac, ax))
+                line(i + 1, i + 1, j, j + 1, alpha, sz_fac, ax)
             if maze.cell_at(i, j).walls['W']:
-                maps.append(line(i, i, j, j + 1, alpha, sz_fac, ax))
-    return maps
+                line(i, i, j, j + 1, alpha, sz_fac, ax)
+
+    return ax
+
+
+from gymnasium import Env
 
 
 class MazeEnv(Env):
-    def __init__(self, sz=3, maze=None, start=np.array([0.1, 0.1]), goal=np.array([1.0, 1.0]),
-                 reward="distance", log=False, eval=False, dt=0.03, horizon=5, wall_penalty=10, slide=1, image_freq=20):
+    def __init__(self, sz=3, maze=None, start=np.array([0.1, 0.1]),
+                 goal=np.array([1.0, 1.0]),
+                 reward="distance", log=False, eval=False,
+                 dt=0.03, horizon=5, wall_penalty=10, slide=1, image_freq=20):
 
-        """
-        sz: The number of rows and columns in the maze
-        maze: Pre-made custom maze, if it exists
-        start: Agent start point, should be inside the unit square.
-        goal: Agent goal point, should be inside the unit square.
-        reward_fn: External reward function to use.
-        log: If episode data must be logged to wandb
-        dt: time step per episode step.
-        horizon: length of episode.
-        wall_penalty: penalty for bumping into walls
-        slide: if 1, activates slide feature, which causes walls to be slippery and allow motion along tangent.
-
-        """
-
-        # Maze dimensions (ncols, nrows)
         nx, ny = sz, sz
         self.sz = sz
-        # Maze entry position
         ix, iy = 0, 0
-        # Map size factor, maze is upscaled by this factor
-        # self.map_sz_fac = map_sz_fac
-        # self.temp_rescale = 1 / (self.map_sz_fac * self.sz)
 
-        # deprecated
-        self.scale = np.array([0, 0])
-        self.zero = np.array([0, 0])
+        self.traj = []
+        self.episode = []
+        self.cur_return = 0
+        self.log = log
+        self.eval = eval
 
-        # self.knowledge = np.array([0, 0])
-        # self.old_return = 0
-
-        self.traj = []  # Stores last state of each episode
-        self.episode = []  # Stores entire episode
-        self.cur_return = 0  # Accumulates current episode return
-        self.log = log  # Whether to log above stats to wandb along with plot
-        self.eval = eval  # Whether to log eval metrics
-
-        # parameters for gym Env
         self.action_shape = 2
         self.observation_shape = 2
         self.action_space = spaces.Box(
             low=-np.full(self.action_shape, 1.0, dtype=np.float32),
-            high=np.full(self.action_shape, 1.0, dtype=np.float32), shape=(2,),
+            high=np.full(self.action_shape, 1.0, dtype=np.float32),
+            shape=(2,),
             dtype=np.float32
         )
-        # TODO Possible source of error: observation low and high are set to 0 and 1 (magic numbers)
         self.observation_space = spaces.Box(
             low=np.full(self.observation_shape, 0.0, dtype=np.float32),
-            high=np.full(self.observation_shape, 1.0, dtype=np.float32), shape=(2,),
+            high=np.full(self.observation_shape, 1.0, dtype=np.float32),
+            shape=(2,),
             dtype=np.float32
         )
 
         self.maze = Maze(nx, ny, ix, iy)
-        self.dt = dt  # Should be sufficient to reach goal within horizon (including noise)
+        self.dt = dt
 
-        # Time step counter and episode horizon
         self.episode_counter = 0
         self.image_freq = image_freq
         self.counter = 0
         self.horizon = horizon
-        npoints = 25
 
+        npoints = 25
+        # Se hai passato un Maze esterno, usa quello:
         # if maze:
-        #     self.maze = maze
+            # self.maze = maze
         # else:
-        #     self.maze.make_maze()
-        
         self.maze.make_maze_fail()
 
         self.worldlines = generate_world(1 / self.sz, self.maze)
-        self.state = np.array(start)
-        self.goal = np.array(goal)
+        self.state = np.array(start, dtype=float)
+        self.goal = np.array(goal, dtype=float)
         self.wall_penalty = wall_penalty
         self.slide = slide
 
@@ -170,127 +174,121 @@ class MazeEnv(Env):
         else:
             self.reward_fn = ConstantReward()
 
-        # Since reward is directly linked to obs, need to pre-compute full array according to observational limits
         x = np.linspace(0, 1, npoints)
         y = np.linspace(0, 1, npoints)
-        self.X, self.Y = np.meshgrid(x, y)  # Needed for plotting contour
+        self.X, self.Y = np.meshgrid(x, y)
         self.points = np.stack((self.X, self.Y), axis=-1)
-        self.Z = None  # To store reward fn output once. Reward function may be changed in main code after init,
-        # hence not init here
-        self.cb = None  # To store colorbar reference, so that it can be removed everytime before redoing image
+        self.Z = None
+        self.cb = None
 
-    def reset(self, state=np.array([0.1, 0.1])):
-        # Resets env to state
-        # Logs scatter map with final position
-        # TODO need to move logging to logcallback
-        # print("Resetting env!\n",self.state,self.cur_return)
+    def sample_open_state(self):
+        open_cells = []
+        for j in range(self.maze.ny):
+            for i in range(self.maze.nx):
+                cell = self.maze.cell_at(i, j)
+                if not all(cell.walls.values()):
+                    open_cells.append((i, j))
+        i, j = random.choice(open_cells)
+        sz_fac = 1 / self.sz
+        x = (i + 0.5) * sz_fac
+        y = (j + 0.5) * sz_fac
+        return np.array([x, y], dtype=float)
+
+    def reset(self, state=None):
         print(f"Resetting environment. Previous state: {self.state}, Counter: {self.counter}")
 
+        if state is None:
+            print("Starting defined")
+            state = self.sample_open_state()
+
+        self.state = state
         self.episode_counter += 1
+
         if self.log and not self.eval:
-            # Only for training envs. Will not run in test envs. (eval is default false for envs)
             self.traj.append(self.state)
-
             if self.episode_counter % self.image_freq == 0:
-                maps = draw_map(1 / self.sz, self.maze)  # maze map already has sz so passing remaining factor
-
+                ax = draw_map(1 / self.sz, self.maze)
                 if self.Z is None:
-                    self.Z = self.reward_fn.compute_reward(self.points)  # negating reward to standardize plot
-                maps.append(plt.contourf(self.X, self.Y, self.Z, 30, cmap='viridis_r'))
+                    self.Z = self.reward_fn.compute_reward(self.points)
+                cf = plt.contourf(self.X, self.Y, self.Z, 30, cmap='viridis_r')
                 if self.cb is not None:
                     self.cb.remove()
                 self.cb = plt.colorbar()
-                plt.scatter(np.array(self.traj)[:, 0], np.array(self.traj)[:, 1], c=np.linspace(0, 1, len(self.traj)),
+                plt.scatter(np.array(self.traj)[:, 0],
+                            np.array(self.traj)[:, 1],
+                            c=np.linspace(0, 1, len(self.traj)),
                             cmap="hot")
                 plt.axis("equal")
 
-            #     wandb.log({"state": self.state, "return": self.cur_return,
-            #                "goal_distance": np.sqrt(np.sum((self.state - (self.goal)) ** 2)),
-            #                "trajectory": wandb.Image(plt), "episode": self.episode})
-            #     plt.close()
-            # else:
-            #     wandb.log({"state": self.state, "return": self.cur_return,
-            #                "goal_distance": np.sqrt(np.sum((self.state - (self.goal)) ** 2)),
-            #                "episode": self.episode})
-
-        self.state = state
         self.counter = 0
         self.cur_return = 0
         self.episode = []
-        # Not adding first state
-        # self.episode.append(self.state)
         return self.state
 
     def collision(self, new_pose):
-        # True if new_pose crosses worldlines.
+        # True if new_pose crosses worldlines
         for i in range(len(self.worldlines)):
-            if intersect(self.state, new_pose, self.worldlines[i][[0, 2]], self.worldlines[i][[1, 3]]):
+            # each entry is [x1, x2, y1, y2]
+            if intersect(self.state, new_pose,
+                         self.worldlines[i][[0, 2]],
+                         self.worldlines[i][[1, 3]]):
                 return True
         return False
 
-    def update_trackers(self, state,  penalty=0, done=False, infos={"A": 1.0}):
-        # function to update current state, return, episode list and log evaluation stats if needed.
-        # dummy infos
+    def update_trackers(self, state, penalty=0, done=False, infos=None):
+        if infos is None:
+            infos = {}
         self.prev_state = self.state
         self.state = state
-        reward = self.reward_fn.get_reward(self.state) - penalty  # reward and env both use [0,1] domain.
+        reward = self.reward_fn.get_reward(self.state) - penalty
         self.cur_return += reward
         self.episode.append(state)
-
-        # observation, reward, terminated, truncated, info
-        # TODO: Fix Truncated output for gymnasium
         return state, reward, done, False, infos
 
     def step(self, action):
-        # action must be a vector. Does not support batching
-        # Automatically clips action to avoid bad inputs
         print(f"Step called. Counter: {self.counter}, Horizon: {self.horizon}")
-
         action = np.clip(action, -1, 1)
-        self.counter += 1  # incrementing step counter
-        infos = {"A": 1.0}  # dummy infos
+        self.counter += 1
         done = False
+        infos = {}
+
         if self.counter >= self.horizon:
             done = True
 
-        # TODO remove this from here, it should auto reset based on this condition
+        # Se sfori la horizon
         if self.counter > self.horizon:
             print("Error: Env stepping after reset!!")
-            # If env is not reset, you will have episodes > 101 time steps.
             return self.update_trackers(self.state, done=done, infos=infos)
 
-        new_pose = self.state + (action[0]) * self.dt * (
-            np.array([np.cos(action[1] * np.pi), np.sin(action[1] * np.pi)]))
+        # Nuova posa
+        new_pose = self.state + action[0] * self.dt * \
+                   np.array([np.cos(action[1] * np.pi),
+                             np.sin(action[1] * np.pi)])
 
-        # Checking collisions
-        for i in range(len(self.worldlines)):
-            if intersect(self.state, new_pose, self.worldlines[i][[0, 2]], self.worldlines[i][[1, 3]]):
-                if self.slide:
-                    # print(new_pose, self.state)
-                    newx = new_pose.copy()
-                    newy = new_pose.copy()
-                    # TODO assumes only horizontal or vertical walls
-                    newx[1] = self.state[1]  # movement only along x
-                    newy[0] = self.state[0]  # movement only along y
-                    if not self.collision(newx):
-                        return self.update_trackers(newx, penalty=self.wall_penalty, done=done,
-                                                    infos=infos)
-                    elif not self.collision(newy):
-                        return self.update_trackers(newy, penalty=self.wall_penalty, done=done,
-                                                    infos=infos)
+        # Collisione?
+        if self.collision(new_pose):
+            # se slide attivo, prova a muoverti solo in x oppure in y
+            if self.slide:
+                newx = new_pose.copy()
+                newy = new_pose.copy()
+                newx[1] = self.state[1]  # movimento solo su x
+                newy[0] = self.state[0]  # movimento solo su y
+                if not self.collision(newx):
+                    return self.update_trackers(newx, penalty=self.wall_penalty, done=done, infos=infos)
+                elif not self.collision(newy):
+                    return self.update_trackers(newy, penalty=self.wall_penalty, done=done, infos=infos)
 
-                # if new position crosses walls + cannot slide, refuse movement
-                return self.update_trackers(self.state, penalty=self.wall_penalty, done=done, infos=infos)
-
-        return self.update_trackers(new_pose, done=done, infos=infos)
+            # Se non si può scivolare, rimani fermo e penalizza
+            return self.update_trackers(self.state, penalty=self.wall_penalty, done=done, infos=infos)
+        else:
+            return self.update_trackers(new_pose, done=done, infos=infos)
 
     def render(self, mode="human"):
         raise NotImplementedError
 
     def background(self, ax):
-        maps = draw_map(1 / self.sz, self.maze, ax=ax)  # maze map already has sz so passing remaining factor
+        ax_map = draw_map(1 / self.sz, self.maze, ax=ax)
         if self.Z is None:
             self.Z = self.reward_fn.compute_reward(self.points)
-        maps.append(ax.contourf(self.X, self.Y, self.Z, 30, cmap='viridis_r'))
-        # maps.append(plt.colorbar())
-        return maps
+        cf = ax.contourf(self.X, self.Y, self.Z, 30, cmap='viridis_r')
+        return [ax_map, cf]
