@@ -12,3 +12,5 @@ Master Thesis on Direct Preference Learning for LLM at Johannes Kepler Universit
 - How the RLHF and DPO works/happen
 - Less text in case 
 - how this formula works —> explain of the variables —> pi_ref and pi_theta —> what is KL divergence
+
+#### ToDo List - Meeting 23.01.2025
