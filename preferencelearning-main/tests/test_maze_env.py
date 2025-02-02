@@ -18,12 +18,12 @@ class TestMazeEnv(unittest.TestCase):
     def setUp(self):
         # Initialize the environment with necessary parameters
         maze = Maze(10, 10, 0, 0) # inizializzazione del labirinto 10x10 dimensione e 0-0 punto iniziale
-        start_test = np.array([0.05, 0.05])
+        self.start_test = np.array([0.05, 0.05])
         # inizializza l'ambiente: sz=10 (dimensione griglia), start/goal sono le posizioni iniziali e finali 
-        self.env = MazeEnv(sz=10, maze=maze, start=start_test, goal=np.array([0.45, 0.70]),
-                 reward="distance", log=False, eval=False, dt=0.1, horizon=10, 
+        self.env = MazeEnv(sz=10, maze=maze, start=self.start_test, goal=np.array([0.45, 0.70]),
+                 reward="distance", log=False, eval=False, dt=0.1, horizon=100, 
                  wall_penalty=10, slide=1, image_freq=100) 
-        self.env.reset(state=start_test)
+        self.env.reset(state=self.start_test)
 
     def test_step(self):
         # Test the step function with a valid action
@@ -86,7 +86,7 @@ class TestMazeEnv(unittest.TestCase):
         fig, ax = plt.subplots()
         ims = []
 
-        self.env.reset()
+        self.env.reset(state=self.start_test)
         for i in range(1000):
             # Azione casuale
             action = np.random.uniform(-1, 1, size=(2,))

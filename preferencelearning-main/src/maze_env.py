@@ -181,18 +181,45 @@ class MazeEnv(Env):
         self.Z = None
         self.cb = None
 
-    def sample_open_state(self):
+    # def sample_open_state(self):
+    #     open_cells = []
+    #     for j in range(self.maze.ny):
+    #         for i in range(self.maze.nx):
+    #             cell = self.maze.cell_at(i, j)
+    #             if not all(cell.walls.values()):
+    #                 open_cells.append((i, j))
+    #     i, j = random.choice(open_cells)
+    #     sz_fac = 1 / self.sz
+    #     x = (i + 0.5) * sz_fac
+    #     y = (j + 0.5) * sz_fac
+    #     return np.array([x, y], dtype=float)
+    
+    # Funzione per generare uno stato aperto continuo
+    def sample_open_state_continuous(self):
         open_cells = []
-        for j in range(self.maze.ny):
-            for i in range(self.maze.nx):
-                cell = self.maze.cell_at(i, j)
-                if not all(cell.walls.values()):
-                    open_cells.append((i, j))
-        i, j = random.choice(open_cells)
+        for y_idx in range(self.maze.ny): 
+            for x_idx in range(self.maze.nx):
+                cell = self.maze.cell_at(x_idx, y_idx) 
+                if not all(cell.walls.values()):  # Escludi le celle completamente chiuse
+                    open_cells.append((x_idx, y_idx))
+        
         sz_fac = 1 / self.sz
-        x = (i + 0.5) * sz_fac
-        y = (j + 0.5) * sz_fac
-        return np.array([x, y], dtype=float)
+        min_offset = 0.001
+        max_offset = 0.999
+        
+        while True:  # Continua finché non trovi un punto valido
+            x_idx, y_idx = random.choice(open_cells)
+            x = (x_idx + np.random.uniform(min_offset, max_offset)) * sz_fac
+            y = (y_idx + np.random.uniform(min_offset, max_offset)) * sz_fac
+
+            # Se il punto cade su un muro, scartalo e riprova
+            if not self.point_collision(x, y):
+                return np.array([x, y], dtype=float)
+
+    
+    def sample_open_state(self):
+        return self.sample_open_state_continuous()
+
 
     def reset(self, state=None):
         print(f"Resetting environment. Previous state: {self.state}, Counter: {self.counter}")
@@ -234,6 +261,72 @@ class MazeEnv(Env):
                          self.worldlines[i][[1, 3]]):
                 return True
         return False
+    
+    def point_collision(self, x, y, epsilon=0.1):
+        """
+        Return True if the point (x,y) is invalid because:
+        - It's out of the maze, or
+        - It's in a fully walled cell, or
+        - It's within 'epsilon' of a partial wall inside an otherwise open cell.
+        """
+        cx = int(x * self.sz)
+        cy = int(y * self.sz)
+
+        # Out of bounds => collision
+        if cx < 0 or cx >= self.maze.nx or cy < 0 or cy >= self.maze.ny:
+            return True
+
+        # Identify the cell
+        cell = self.maze.cell_at(cx, cy)
+
+        # If the cell is fully closed, that’s definitely a collision
+        if all(cell.walls.values()):
+            return True
+
+        # --- Now check partial walls. ---
+        # We'll compute the point's local coordinates in [0..1] within this cell.
+        #   local_x = 0.0 means left edge of the cell
+        #   local_x = 1.0 means right edge of the cell
+        # (Similarly for local_y = 0..1.)
+        local_x = x * self.sz - cx
+        local_y = y * self.sz - cy
+
+        # If there's a 'N' (north) wall => top edge is blocked => local_y=1 is not allowed
+        if cell.walls['N']:
+            if local_y >= 1 - epsilon:
+                return True
+
+        # If there's a 'S' (south) wall => bottom edge blocked => local_y=0 is not allowed
+        if cell.walls['S']:
+            if local_y <= epsilon:
+                return True
+
+        # If there's an 'E' (east) wall => right edge => local_x=1 is blocked
+        if cell.walls['E']:
+            if local_x >= 1 - epsilon:
+                return True
+
+        # If there's a 'W' (west) wall => left edge => local_x=0 is blocked
+        if cell.walls['W']:
+            if local_x <= epsilon:
+                return True
+
+        # If we get here, it's not out of bounds, not fully closed,
+        # and not within epsilon of any partial wall => no collision
+        return False
+
+    
+    # def point_collision(self, x, y):
+    #     # Figure out which cell that point is in
+    #     cx = int(x * self.sz)  # which column
+    #     cy = int(y * self.sz)  # which row
+    #     # If out of bounds, consider it invalid:
+    #     if cx < 0 or cx >= self.maze.nx or cy < 0 or cy >= self.maze.ny:
+    #         return True
+    #     # If that cell is completely walled, it’s invalid
+    #     cell = self.maze.cell_at(cx, cy)
+    #     return all(cell.walls.values())
+
 
     def update_trackers(self, state, penalty=0, done=False, infos=None):
         if infos is None:
