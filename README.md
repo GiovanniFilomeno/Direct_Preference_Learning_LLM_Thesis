@@ -14,5 +14,5 @@ Master Thesis on Direct Preference Learning for LLM at Johannes Kepler Universit
 - how this formula works —> explain of the variables —> pi_ref and pi_theta —> what is KL divergence
 
 #### ToDo List - Meeting 23.01.2025
-- Create a distribution of positions and find a way to define, based on two positions, which one the algorithm should prefer
+- Create a distribution of positions and find a way to define, based on two positions, which one the algorithm should prefer: distribution done, preference parameters still missing for the dataset
 - Writing the report
