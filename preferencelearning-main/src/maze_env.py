@@ -7,6 +7,8 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import torch
+import torch.nn as nn
 
 random.seed(1)
 
@@ -116,12 +118,26 @@ def draw_map(sz_fac, maze, ax=None, alpha=0.5, prints=None):
 
 from gymnasium import Env
 
+# Define the Policy Network class for DPO
+class PolicyNetwork(nn.Module):
+    def __init__(self, input_dim=2, hidden_dim=128, num_layers=5):
+        super(PolicyNetwork, self).__init__()
+        layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
+        for _ in range(num_layers - 1):
+            layers.append(nn.Linear(hidden_dim, hidden_dim))
+            layers.append(nn.ReLU())
+        layers.append(nn.Linear(hidden_dim, 1))
+        self.network = nn.Sequential(*layers)
+    
+    def forward(self, x):
+        return self.network(x)
 
 class MazeEnv(Env):
     def __init__(self, sz=3, maze=None, start=np.array([0.1, 0.1]),
                  goal=np.array([1.0, 1.0]),
                  reward="distance", log=False, eval=False,
-                 dt=0.03, horizon=5, wall_penalty=10, slide=1, image_freq=20):
+                 dt=0.03, horizon=5, wall_penalty=10, slide=1, image_freq=20,
+                 use_dpo=False, dpo_model_path="dpo_policy.pth"):
 
         nx, ny = sz, sz
         self.sz = sz
@@ -157,10 +173,6 @@ class MazeEnv(Env):
         self.horizon = horizon
 
         npoints = 25
-        # Se hai passato un Maze esterno, usa quello:
-        # if maze:
-            # self.maze = maze
-        # else:
         self.maze.make_maze_fail()
 
         self.worldlines = generate_world(1 / self.sz, self.maze)
@@ -181,18 +193,16 @@ class MazeEnv(Env):
         self.Z = None
         self.cb = None
 
-    # def sample_open_state(self):
-    #     open_cells = []
-    #     for j in range(self.maze.ny):
-    #         for i in range(self.maze.nx):
-    #             cell = self.maze.cell_at(i, j)
-    #             if not all(cell.walls.values()):
-    #                 open_cells.append((i, j))
-    #     i, j = random.choice(open_cells)
-    #     sz_fac = 1 / self.sz
-    #     x = (i + 0.5) * sz_fac
-    #     y = (j + 0.5) * sz_fac
-    #     return np.array([x, y], dtype=float)
+        self.use_dpo = use_dpo
+        if self.use_dpo:
+            self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+            self.policy_net = PolicyNetwork().to(self.device)
+            self.policy_net.load_state_dict(torch.load(dpo_model_path, map_location=self.device))
+            self.policy_net.eval()
+
+    def evaluate_state_with_dpo(self, state):
+        state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
+        return self.policy_net(state_tensor).item()
     
     # Funzione per generare uno stato aperto continuo
     def sample_open_state_continuous(self):
@@ -315,25 +325,16 @@ class MazeEnv(Env):
         # and not within epsilon of any partial wall => no collision
         return False
 
-    
-    # def point_collision(self, x, y):
-    #     # Figure out which cell that point is in
-    #     cx = int(x * self.sz)  # which column
-    #     cy = int(y * self.sz)  # which row
-    #     # If out of bounds, consider it invalid:
-    #     if cx < 0 or cx >= self.maze.nx or cy < 0 or cy >= self.maze.ny:
-    #         return True
-    #     # If that cell is completely walled, it’s invalid
-    #     cell = self.maze.cell_at(cx, cy)
-    #     return all(cell.walls.values())
-
 
     def update_trackers(self, state, penalty=0, done=False, infos=None):
         if infos is None:
             infos = {}
         self.prev_state = self.state
         self.state = state
-        reward = self.reward_fn.get_reward(self.state) - penalty
+        if self.use_dpo:
+            reward = self.evaluate_state_with_dpo(self.state) - penalty
+        else:
+            reward = self.reward_fn.get_reward(self.state) - penalty
         self.cur_return += reward
         self.episode.append(state)
         return state, reward, done, False, infos
@@ -348,30 +349,20 @@ class MazeEnv(Env):
         if self.counter >= self.horizon:
             done = True
 
-        # Se sfori la horizon
-        if self.counter > self.horizon:
-            print("Error: Env stepping after reset!!")
-            return self.update_trackers(self.state, done=done, infos=infos)
-
-        # Nuova posa
         new_pose = self.state + action[0] * self.dt * \
                    np.array([np.cos(action[1] * np.pi),
                              np.sin(action[1] * np.pi)])
 
-        # Collisione?
         if self.collision(new_pose):
-            # se slide attivo, prova a muoverti solo in x oppure in y
             if self.slide:
                 newx = new_pose.copy()
                 newy = new_pose.copy()
-                newx[1] = self.state[1]  # movimento solo su x
-                newy[0] = self.state[0]  # movimento solo su y
+                newx[1] = self.state[1]
+                newy[0] = self.state[0]
                 if not self.collision(newx):
                     return self.update_trackers(newx, penalty=self.wall_penalty, done=done, infos=infos)
                 elif not self.collision(newy):
                     return self.update_trackers(newy, penalty=self.wall_penalty, done=done, infos=infos)
-
-            # Se non si può scivolare, rimani fermo e penalizza
             return self.update_trackers(self.state, penalty=self.wall_penalty, done=done, infos=infos)
         else:
             return self.update_trackers(new_pose, done=done, infos=infos)

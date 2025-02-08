@@ -22,7 +22,7 @@ class TestMazeEnv(unittest.TestCase):
         # inizializza l'ambiente: sz=10 (dimensione griglia), start/goal sono le posizioni iniziali e finali 
         self.env = MazeEnv(sz=10, maze=maze, start=self.start_test, goal=np.array([0.95, 0.95]),
                  reward="distance", log=False, eval=False, dt=0.1, horizon=500, 
-                 wall_penalty=10, slide=1, image_freq=100) 
+                 wall_penalty=10, slide=1, image_freq=100, use_dpo=True, dpo_model_path="../src/dpo_policy.pth") 
         self.env.reset(state=self.start_test)
 
     def test_step(self):
@@ -118,7 +118,7 @@ class TestMazeEnv(unittest.TestCase):
         images = []
         for i in range(len(ims)):
             images.append(imageio.v2.imread(os.path.join(video_dir, f'state_{i}.png')))
-        imageio.mimsave('../agent_interaction_fail.gif', images, duration=33)
+        imageio.mimsave('../agent_interaction_dpo.gif', images, duration=33)
 
         # Rimuovere le immagini salvate
         for i in range(len(ims)):
