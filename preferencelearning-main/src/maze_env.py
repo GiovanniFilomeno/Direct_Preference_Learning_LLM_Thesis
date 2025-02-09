@@ -120,7 +120,7 @@ from gymnasium import Env
 
 # Define the Policy Network class for DPO
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim=2, hidden_dim=128, num_layers=5):
+    def __init__(self, input_dim=2, hidden_dim=32, num_layers=2):
         super(PolicyNetwork, self).__init__()
         layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
         for _ in range(num_layers - 1):
