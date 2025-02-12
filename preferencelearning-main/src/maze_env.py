@@ -120,7 +120,7 @@ from gymnasium import Env
 
 # Define the Policy Network class for DPO
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim=2, hidden_dim=32, num_layers=2):
+    def __init__(self, input_dim=2, hidden_dim=32, num_layers=3):
         super(PolicyNetwork, self).__init__()
         layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
         for _ in range(num_layers - 1):
@@ -137,7 +137,7 @@ class MazeEnv(Env):
                  goal=np.array([1.0, 1.0]),
                  reward="distance", log=False, eval=False,
                  dt=0.03, horizon=5, wall_penalty=10, slide=1, image_freq=20,
-                 use_dpo=False, dpo_model_path="dpo_policy.pth"):
+                 use_dpo=False, dpo_model_path="best_dpo_policy.pth"):
 
         nx, ny = sz, sz
         self.sz = sz
