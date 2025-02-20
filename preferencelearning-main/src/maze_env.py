@@ -272,7 +272,7 @@ class MazeEnv(Env):
                 return True
         return False
     
-    def point_collision(self, x, y, epsilon=0.1):
+    def point_collision(self, x, y, epsilon=0.01):
         """
         Return True if the point (x,y) is invalid because:
         - It's out of the maze, or
