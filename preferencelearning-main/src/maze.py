@@ -61,29 +61,24 @@ class Maze:
         #    Riga dispari (y%2==1): apri da x=nx-1 a x=0
         #    E alla fine di ogni riga, apri un passaggio verso la riga successiva.
         for row in range(ny):
-            if row < ny-1:
-                if row % 2 == 0:
-                    # Riga pari => apri in orizzontale da sinistra (0) a destra (nx-1)
-                    for x in range(nx - 1):
-                        self.grid[row][x].walls["E"] = False
-                        self.grid[row][x + 1].walls["W"] = False
-                    # Se non siamo all'ultima riga, apri un passaggio giù (S)
-                    if row < ny - 1:
-                        self.grid[row][nx - 1].walls["S"] = False
-                        self.grid[row + 1][nx - 1].walls["N"] = False
-                else:
-                    # Riga dispari => apri in orizzontale da destra (nx-1) a sinistra (0)
-                    for x in range(nx - 1, 0, -1):
-                        self.grid[row][x].walls["W"] = False
-                        self.grid[row][x - 1].walls["E"] = False
-                    # Se non siamo all'ultima riga, apri un passaggio giù (S)
-                    if row < ny - 1:
-                        self.grid[row][0].walls["S"] = False
-                        self.grid[row + 1][0].walls["N"] = False
-            else:
+            if row % 2 == 0:
+                # Riga pari => apri in orizzontale da sinistra (0) a destra (nx-1)
                 for x in range(nx - 1):
                     self.grid[row][x].walls["E"] = False
                     self.grid[row][x + 1].walls["W"] = False
+                # Se non siamo all'ultima riga, apri un passaggio giù (S)
+                if row < ny - 1:
+                    self.grid[row][nx - 1].walls["S"] = False
+                    self.grid[row + 1][nx - 1].walls["N"] = False
+            else:
+                # Riga dispari => apri in orizzontale da destra (nx-1) a sinistra (0)
+                for x in range(nx - 1, 0, -1):
+                    self.grid[row][x].walls["W"] = False
+                    self.grid[row][x - 1].walls["E"] = False
+                # Se non siamo all'ultima riga, apri un passaggio giù (S)
+                if row < ny - 1:
+                    self.grid[row][0].walls["S"] = False
+                    self.grid[row + 1][0].walls["N"] = False
 
         # 3) Ora chiudiamo "davvero" il perimetro esterno (il bounding box)
         #    in modo che l'agente non possa scappare fuori.
