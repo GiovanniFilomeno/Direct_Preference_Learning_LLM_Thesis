@@ -16,3 +16,8 @@ Master Thesis on Direct Preference Learning for LLM at Johannes Kepler Universit
 #### ToDo List - Meeting 23.01.2025
 - Create a distribution of positions and find a way to define, based on two positions, which one the algorithm should prefer: distribution done, preference parameters still missing for the dataset
 - Writing the report
+
+#### ToDo List - Meeting 21.02.2025
+- Try a simpler maze
+- Start to think about a more realistic scenario
+- Both report for Seminar and Practical Partk
