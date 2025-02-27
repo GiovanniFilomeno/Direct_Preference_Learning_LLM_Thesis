@@ -20,4 +20,4 @@ Master Thesis on Direct Preference Learning for LLM at Johannes Kepler Universit
 #### ToDo List - Meeting 21.02.2025
 - Try a simpler maze
 - Start to think about a more realistic scenario
-- Both report for Seminar and Practical Partk
+- Both report for Seminar and Practical Work --> Up to next semester
