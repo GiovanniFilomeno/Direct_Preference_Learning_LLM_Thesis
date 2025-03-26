@@ -1,0 +1,511 @@
+% !TeX program = xelatex
+% !TeX encoding = UTF-8
+% !TeX spellcheck = en_US
+% !BIB program = biber
+%% 
+%% The above lines help editors like TeXstudio to automatically choose the right tools
+%% to compile your LaTeX source file. If your tool does not support these magic comments,
+%% you will need to make appropriate manual choices.
+%% 
+%% You can safely use "pdflatex" instead of "xelatex" if you prefer the pdfLaTeX toolchain.
+%% However, pdfLaTeX will not be able to deliver the professional font experience that you
+%% will get with XeLaTeX. You can also safely use "lualatex" instead of "xelatex" while
+%% preserving the professional font experience if you prefer the LuaLaTeX toolchain.
+%% 
+%% _Important_: These magic comments should be on the first lines of your source file.
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%%            JJJJ   K                         K   UUUU         UUUU  
+%%            JJJJ   KKKK                   KKKK   UUUU         UUUU  
+%%            JJJJ   KKKKKK               KKKKKK   UUUU         UUUU  
+%%            JJJJ      KKKKKK         KKKKKK      UUUU         UUUU  
+%%            JJJJ         KKKKKK   KKKKKK         UUUU         UUUU  
+%%            JJJJ            KKKKKKKKK            UUUU         UUUU  
+%%    JJ     JJJJJ               KKK               UUUUU       UUUUU  
+%%  JJJJJJJJJJJJJ    KKKKKKKKKKKKKKKKKKKKKKKKKKK    UUUUUUUUUUUUUUU   
+%%    JJJJJJJJJ      KKKKKKKKKKKKKKKKKKKKKKKKKKK      UUUUUUUUUUU     
+%% 
+%% This is an example file for using the JKU LaTeX technical report template
+%% for your seminar report.
+%% 
+%% Template created by Michael Roland (2023)
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Document class: This is a koma-script article.
+%% 
+\documentclass[a4paper,oneside,10pt,ngerman,english]{scrartcl}
+%% 
+%% The comma-separated list in square brackets are class options.
+%% Useful options that you might want to use:
+%% 
+%% Paper size:
+%%  * a4paper ... A4 paper size
+%% 
+%% Optimize for single-sided or double-sided printing:
+%%  * oneside ... single-sided
+%%  * twoside ... double-sided
+%% 
+%% Base font size:
+%%  * 10pt ... 10-pt font is used for normal text
+%%  * 11pt ... 11-pt font is used for normal text
+%% 
+%% Define document languages (the last specified language becomes the document default
+%% language):
+%%  * ngerman ... German
+%%  * english ... English
+%%  * ...
+%% 
+%% Alternate document classes: The JKU report template supports the koma-script classes
+%% `scrartcl', `scrreprt' and `scrbook'. The article class `scrartcl' is well-suited
+%% for a typical seminar report. However, `scrbook' or `scrreprt' may be better
+%% suited for longer reports since they permit structuring your work in chapters.
+%%  
+%% _Important_: The document class should be the first line of LaTeX code in your main
+%% source file. Do not place anything but comments / magic comments above that line (unless
+%% you really know what you are doing).
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Treat input files as UTF-8 encoded. Make sure to always load this when you use pdfLaTeX
+%% so that pdfLaTeX knows how to read and interpret characters in this source file.
+%% 
+\usepackage[utf8]{inputenc}
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Use the JKU LaTeX technical report template for this document.
+%% 
+\usepackage[seminarreport,fancyfonts]{jkureport}
+%% 
+%% The comma-separated list in square brackets are theme options. Useful options that you
+%% might want to use:
+%% 
+%% Document type:
+%%  * phdthesis     ... PhD thesis.
+%%  * mathesis      ... Master's thesis.
+%%  * diplomathesis ... Diploma thesis.
+%%  * bathesis      ... Bachelor's thesis.
+%%  * seminarreport ... Seminar report.
+%%  * techreport    ... Technical report.
+%% 
+%% Color scheme selection options:
+%%  * JKU  ... Use JKU (gray) color scheme (this is the default if no scheme is selected).
+%%  * BUS  ... Use Business School color scheme.
+%%  * LIT  ... Use Linz Institute of Technology color scheme.
+%%  * MED  ... Use MED faculty color scheme.
+%%  * RE   ... Use RE faculty color scheme.
+%%  * SOE  ... Use School of Education color scheme.
+%%  * SOWI ... Use SOWI faculty color scheme.
+%%  * TNF  ... Use TNF faculty color scheme.
+%% 
+%% Space-efficient monospace font options (requires XeTeX/LuaTeX):
+%%  * compactmono   ... Use condensed fixed-width font everywhere.
+%%  * nocompactverb ... Do not use condensed fixed-width font for verbatim and listings.
+%% 
+%% Style-breaking options:
+%%  * noimprint      ... Do not insert imprint on title pages.
+%%  * nojkulogo      ... Do not insert JKU & K logos on title pages.
+%%  * capstitle      ... Set document title in capital letters.
+%%  * nofancyfonts   ... Do not use custom TTF fonts with XeTeX/LuaTeX / supress pdfLaTeX warning.
+%%  * equalmargins   ... Decrease the outer page margin to have both page margins of equal size
+%%                       (the additional outer margin is intentional and to be used for
+%%                       anotations; equalmargins also causes the text width to be
+%%                       significantly larger than optimal for reading).
+%% 
+%% Experimental options:
+%%  * mathastext ... Use standard document fonts (enhanced with symbols from Fira Math font
+%%                   when using XeTeX/LuaTeX) in math mode.
+%% 
+%% Advanced options:
+%%  * noautopdfinfo     ... Do not automatically try to add pdfinfo with hyperref from document
+%%                          metadata fields.
+%%  * logopath={<path>} ... Set the path where the theme can find its own logo resources. This
+%%                          should typically be a relative path and the default is `./logos'.
+%%  * fontpath={<path>} ... Set the path where the theme can find its own font resources. This
+%%                          should typically be a relative path and the default is `./fonts'.
+%% 
+%% Hint: Boolean options can be used in the forms `option' or `option=true' the enable the
+%% option and `nooption' or `option=false' to disable the option.
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% This is the place where you can load additional packages. If you want to load
+%% a package `biblatex', you would use the command `\usepackage{biblatex}'.
+%% 
+
+\usepackage{csquotes}
+\usepackage[backend=biber,citestyle=numeric,sortcites=true,maxcitenames=2,style=ACM-Reference-Format]{biblatex}
+\setcounter{biburlnumpenalty}{100} %% reducing biburl* penalties typically improves URL placement in bibliography
+\setcounter{biburllcpenalty}{100}
+\setcounter{biburlucpenalty}{100}
+\usepackage{todonotes}
+\usepackage{import}
+\usepackage{amsfonts}
+\usepackage{subfigure}
+%\usepackage{acronym}
+
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Bibliography data files.
+%% 
+
+\addbibresource{references.bib}
+
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Report information and title page
+%% 
+
+%% Command \title{title}: sets the title of your report
+\title{Your Language Modell is Secretly a Reward Model}
+
+%% Command \titleshort{short title}: sets an abbreviated version of the report title for page heads
+%\titleshort{Optional space for your abbreviated title}
+
+%% Command \subtitle{subtitle}: sets the subtitle for seminar/technical reports (not used for theses)
+\subtitle{Seminar Report}
+
+%% Command \author{name}: sets the author's name; use \prefix{} and \suffix{} to add academic titles
+%%   and suffixes, use \matno{} to add the immatriculation number
+\author{Giovanni~Filomeno \matno{12345678}}
+
+%% Command \supervisor[number,gender]{name}: sets the name of the supervisor (where number optionally
+%%   defines the rank of the supervisor (1-3) and gender specifies if the supervisor is male or female
+%%   to adapt gener-specific terms in German)
+%\supervisor[1]{\prefix{Prof. Dr.} Firstname~Lastname}
+%\supervisor[2]{\prefix{Prof. Dr.} Firstname~Lastname}
+
+%% Command \submissiondepartment{institute or department}: set the course or department that the thesis
+%%   is submitted at
+\submissiondepartment{Seminar in AI (Master) (365.205)}
+
+%% Command \date{YYYY-MM-DD}: set the day of submission (defaults to today)
+%\date{2020-04-09}
+
+%% Command \abstract{text}: set the document abstract on the title page
+\abstract{Space for your (short) abstract.}
+
+%% Command \keywords{text}: set the document keywords
+%\keywords{Space for your comma-separated keywords}
+
+
+%% Finally, print the title page using the above information:
+\maketitle
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Add a table of contents
+%% 
+
+%% Make sure to start the table of contents on a new odd page (odd is only relevant in twoside layout)
+\cleardoubleoddpage
+%% Print the table of contents
+\tableofcontents
+
+%% Make sure to start the list of acronyms on a new odd page (odd is only relevant in twoside layout)
+%\cleardoubleoddpage
+%% Include list of acronyms (optional and often not necessary)
+%\import{./}{acronyms}
+
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Abstract: Instead of an abstract on the title page (see \abstract{...}), you
+%% sometimes want to add an abstract as its own unnumbered section.
+%% 
+
+%% (Optionally) let the abstract start on a new odd page (odd is only relevant in twoside layout)
+\cleardoubleoddpage
+
+\addsec{Abstract}
+
+Recent advances in large-scale language models have highlighted the challenges of aligning these models with human intent and preference. Among numerous alignment strategies, Reinforcement Learning from Human Feedback (RLHF) has attracted particular attention due to its demonstrated success in steering model behavior. However, RLHF pipelines often involve multiple components (e.g., a reward model and an RL algorithm like PPO) that can be costly, unstable, or prone to reward hacking. Direct Preference Optimization (DPO) offers a simpler alternative by implicitly learning a reward function and extracting an optimal policy in closed form, which enables more stable and computationally lightweight training. In this literature review, the motivation, theoretical underpinnings, and empirical performance of DPO relative to other preference-based approaches are examined. Also, the implications of DPO for safer and more controllable text generation are discussed, and open questions regarding scalability, partial observability, and robustness to non-transitive human preferences are highlighted. Throughout, additional perspectives from contrastive learning, reward modeling, and iterative feedback loops are incorporated, synthesizing insights that inform both research and practical deployment of preference-aligned language models.
+
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Add your report sections ...
+%% 
+
+\section{Story Summary}
+\label{sec:storysummary}
+
+\begin{enumerate}
+    \item \textbf{What is the central question?} \\
+    If the language models can be effectively aligned with human preferences by focusing on methods like Reinforcement Learning from Human Feedback (RLHF) and Direct Preference Optimization (DPO). Key methodological choices that ensure stable training, computational efficiency, and robust, human-aligned outputs, while mitigating issues like reward hacking and instability, are the focus of this inquiry.
+
+    \item \textbf{Why is this question important?} \\
+    As highlighted in the provided papers, large language models, when trained solely on next-token prediction, can exhibit unintended and potentially harmful behaviors. Aligning these models with human preferences is crucial for safety, ethical considerations, and ensuring their utility in real-world applications. The ability to steer these models towards desired behaviors is essential for responsible deployment. As stated in \cite{lambert2022illustrating}, "what makes a 'good' text is inherently hard to define as it is subjective and context dependent." Therefore, it is important to align the models with human preferences.
+
+    \item \textbf{What evidence/data (variables) are needed to answer this question?} \\
+    To answer this question, diverse preference datasets are essential. These datasets should consist of human annotations (or proxies) that compare model outputs. Key variables include:
+    \begin{itemize}
+        \item Preference accuracy (win rates) against baselines.
+        \item Quantitative measures of reward model calibration.
+        \item Qualitative measures of alignment (e.g., toxicity reduction, helpfulness)
+        \item Data related to training stability (e.g., convergence rates, variance).
+        \item Computational efficiency (training time and resource usage).
+        \item Scalability metrics.
+        \item Metrics on robustness to distribution shift. 
+        \item Metrics on the model's ability to handle intransitive human preferences. 
+    \end{itemize}
+
+    \item \textbf{What methods are used to get this evidence/data?} \\
+    From literature, the following methods have been employed: 
+    \begin{itemize}
+        \item Human annotation: Gathering preference labels from human annotators by presenting them with pairs of model outputs. 
+        \item Automated evaluation: Using models (e.g., GPT-4) as proxies for human judgment. 
+        \item RL Pipelines: Implementing RLHF, which involves training a reward model and using it to optimize the language model's policy.
+        \item  DPO: Directly optimizing the policy using preference data through a classification loss, as described in \cite{bib:Rafailov2023}.
+        \item Constrastive Preference Learning Learning directly from preferences without explicitly learning a reward function, as shown in \cite{bib:Zhao2023}.
+        \item Self-Play Preference Optimization: Using the model to generate its own training data.
+    \end{itemize}
+
+    \item \textbf{What analyses must be applied for the data to answer the central question?} \\
+    The following analyses are crucial to answer the central question:
+    \begin{itemize}
+        \item Statistical evaluations: Measuring preference accuracy, reward model loss curves, and convergence rates.
+        \item User studies: Gathering qualitative feedback on model outputs.
+        \item Comparing analyses: Investigating the impact of hyperparameters, reference policies, and reward designs on performance. Additionally, the comparison can be made on model level, comparing the performance of RLHF, DPO, and other preference-based methods.
+        \item Analysis of computational cost.
+    \end{itemize}
+
+    \item \textbf{What evidence/data (values for the variables) were obtained?} \\
+    Empirical studies have yielded evidence of improved preference satisfaction scores and reduced toxic content in RLHF- and DPO-tuned models. Additionally, higher user satisfaction has been observed across various tasks, including summarization, dialogue, and instruction following. However, performance variability exists, depending on dataset size and preference consistency. Furthermore, \cite{bib:Rafailov2023} shows that DPO is more computationally efficient than RLHF. The study in \cite{bib:Zhao2023} shows that contrastive preference learning can be a viable alternative to RLHF.
+
+    \item \textbf{What were the results of the analyses?} \\
+    Analyses have demonstrated that RLHF reliably improves alignment, though it is susceptible to reward hacking and high computational overhead. Conversely, DPO has shown comparable or improved performance with a more stable and computationally lighter training pipeline, with its success contingent upon accurate implicit reward parameterization. Alternative approaches, such as contrastive preference learning, have demonstrated promise in bypassing explicit reward modeling, and Self-Play Preference Optimization shows that the model can be used to generate it's own training data.
+
+    \item \textbf{How did the analyses answer the central question?} \\
+    The analyses have provided evidence that methods combining preference data with sound optimization strategies can effectively align models with human intent. Notably, DPO offers a closed-form alignment solution, suggesting that complex reinforcement learning may not always be necessary for achieving robust preference alignment.
+
+    \item \textbf{What does this answer tell us about the broader field?} \\
+    These findings indicate that preference-based fine-tuning is essential for controlling large language models. Moreover, simpler and more stable alignment techniques, such as DPO, represent viable alternatives to complex reinforcement learning approaches. Consequently, future research efforts should prioritize efficient and safe AI deployment, with a focus on addressing scalability, distribution shift, and the handling of inconsistent human preferences. The field is progressing towards more diverse and efficient methods for aligning LLMs with human preferences.
+
+    \item \textbf{Did the paper answer the question satisfactorily? Why (not)?} \\
+    YES, within the constraints of current empirical data and theoretical frameworks, the reviewed documents suggest that RLHF and DPO, along with other methods, have made substantial progress in aligning LLMs. However, ongoing research is necessary to address challenges related to scalability, mitigate distribution shift issues, handle potential intransitive or inconsistent human preferences, further explore the theoretical foundations of preference-based learning, and investigate alternative methodologies.
+\end{enumerate}
+
+%% (Optionally) let the main sections start on a new odd page (odd is only relevant in twoside layout)
+\cleardoubleoddpage
+
+\section{Introduction}
+\label{sec:introduction}
+
+Large language models (LLMs) have rapidly evolved to achieve near-human or even superhuman
+performance on tasks such as reading comprehension, summarization, and instruction following. Yet,
+the question of \emph{how} to align these models with human interests, safety requirements, and
+behavioral norms remains at the forefront of AI research. Purely maximizing next-token likelihood
+on large text corpora often fails to produce outputs that reflect the specific preferences or values
+of intended end-users. Reinforcement Learning from Human Feedback (RLHF)~\cite{bib:Christiano2017}
+has thus emerged as one influential approach, coupling human-annotated comparisons with a reward
+model to iteratively steer policy gradients toward human-aligned outputs. However, RLHF pipelines
+commonly rely on multiple training phases (reward model learning, policy optimization) and can
+suffer from high computational overhead or reward gaming~\cite{bib:Gao2023}.
+
+An alternative family of methods focuses on learning directly from preference data without explicit
+reinforcement loops. Notably, \emph{Direct Preference Optimization (DPO)}~\cite{bib:Rafailov2023}
+proposes to reparameterize the reward function in a way that yields an optimal policy in closed form,
+effectively turning the traditional RLHF pipeline into a more stable, single-stage procedure. Recent
+studies show that DPO can match or exceed the performance of RLHF on tasks such as summarization
+or sentiment control, while mitigating some of the complexities inherent in policy-gradient methods
+like PPO~\cite{bib:Schulman2017}. Meanwhile, numerous variants of preference-based alignment
+continue to emerge, ranging from contrastive preference learning~\cite{bib:Zhao2023} to frameworks
+that address non-transitive human judgments~\cite{bib:Tversky1969}.
+
+This literature review examines the conceptual motivations behind both RLHF and direct preference
+approaches, highlighting their benefits and trade-offs. Section~2 outlines the background pipeline
+for RLHF, including typical steps of supervised fine-tuning and reward model training. Section~3
+delves deeper into the DPO algorithm, illustrating how its \emph{closed-form} solution bypasses the
+need for iterative on-policy sampling. In Section~4, we survey other preference-based strategies and
+contextualize them within the broader field of human-aligned language modeling. Finally, the
+Conclusion discusses outstanding questions related to scaling, model interpretability, and handling
+ambiguities or inconsistencies in human-labeled feedback. Through this lens, we underscore that the
+real challenge lies not only in \emph{whether} LLMs can be preference-tuned, but in choosing \emph{how}
+best to combine computational tractability with fidelity to diverse and often complex human values.
+
+\section{Background Pipeline}
+\label{sec:background}
+
+Aligning large language models (LLMs) with human intentions often begins with a multi-step
+\emph{preference optimization pipeline}. In practice, this pipeline can follow a trajectory from
+\emph{supervised fine-tuning} (SFT) on high-quality demonstrations to more involved \emph{reinforcement}
+or \emph{direct optimization} steps. Below we summarize the stages typically found in the Reinforcement
+Learning from Human Feedback (RLHF) approach and then briefly contrast it with the Direct Preference
+Optimization (DPO) paradigm.
+
+\subsection{Supervised Fine-Tuning (SFT)}
+During SFT, a pre-trained language model (such as GPT-like or encoder-decoder transformers) is tuned
+on a collection of high-quality input--output pairs. Often, these pairs come from human-written
+examples or carefully curated data that reflects the desired style, task performance, or safety
+profile. The objective is the standard cross-entropy loss over the ground-truth tokens, effectively shifting
+the model from a general-purpose distribution to one more aligned with an intended domain or task.
+A notable advantage of SFT is that it is straightforward to implement, provided enough high-quality
+demonstrations exist. However, it may fail to capture nuanced user preferences or subtle policy constraints
+beyond the scope of the explicit training data. This SFT model often serves as the starting point or \textbf{reference policy} ($\pi_{\text{ref}}$) for subsequent preference tuning stages.
+
+\subsection{Human-Preference Collection and Reward Modeling}
+Once a model is supervised fine-tuned, practitioners typically collect a \emph{human preference dataset}
+($D = \{(x, y_w, y_l)\}$, where $y_w$ is preferred over $y_l$ for prompt $x$) by asking annotators to compare pairs of model-generated outputs for the same context or prompt. For
+instance, given a request such as ``\textit{Summarize the following paragraph,}'', the model may
+produce two different completions, and annotators select which is more satisfactory, e.g., in terms
+of correctness or clarity. These relative judgments form a dataset of preferences, which can then be
+used to train a \emph{reward model} (RM). The RM learns a scalar score $r_\phi(x, y)$ for each candidate output so
+that higher scores correlate with ``more preferred'' completions, often modeled using frameworks like the Bradley--Terry model~\cite{bib:bradley1952rank}. Unlike purely supervised data, this
+pairwise preference data can be more efficient for complex tasks, because it is often easier for humans to
+rank outputs than to produce perfect references \cite{bib:stiennon2020learning}.
+
+\subsection{Reinforcement Learning from Human Feedback (RLHF)}
+\label{sec:rlhf-pipeline}
+In the RLHF setting, the policy, typically initialized from the SFT model ($\pi_{\text{ref}}$), is further optimized using the
+trained reward model $r_\phi$ as the reward signal within a reinforcement learning framework. Notably, policy-gradient methods like Proximal Policy Optimization (PPO)~\cite{bib:Schulman2017} are commonly employed. These methods often involve training both the policy itself (the actor) and an associated \textbf{value model} (the critic) to estimate expected future rewards and stabilize updates. The overall objective maximizes the expected reward $E_{y \sim \pi_\theta(y|x)}[r_\phi(x,y)]$ while incorporating a KL-divergence penalty $-\beta D_{KL}(\pi_\theta(\cdot|x) || \pi_{\text{ref}}(\cdot|x))$ to prevent the optimized policy $\pi_\theta$ from diverging too drastically from the initial reference policy $\pi_{\text{ref}}$. Over multiple rounds of
+\emph{on-policy} sampling and updates, the model aims to produce outputs that score higher
+under the learned reward function, thus aligning it more closely with user preferences. While
+effective in practice, RLHF can exhibit instability due to the challenges of on-policy sampling at scale, potential reward
+gaming, or calibration issues with the reward model \cite{bib:gao2023scaling}.
+
+\subsection{Direct Preference Optimization (DPO)}
+\label{sec:background-dpo}
+Direct Preference Optimization (DPO) proposes a \emph{closed-form} approach for transforming
+pairwise preferences directly into policy updates \cite{bib:rafailov2023direct}. Rather than explicitly
+construct a reward function and then apply RL, DPO leverages an analytical relationship between the optimal RLHF policy and the underlying reward function. It shows that under the typical KL-constrained RLHF objective, the optimal policy can be derived directly from the preference data using a simple classification-like loss, effectively bypassing the need for explicit reward modeling and iterative on-policy rollouts.
+The model can be updated directly using the offline preference dataset $D$. Early results
+suggest that DPO simplifies the training pipeline significantly while maintaining or exceeding
+the performance of standard RLHF in tasks such as summarization, dialogue, and instruction
+following. However, DPO’s theoretical derivation relies on assumptions such as the
+Bradley--Terry preference model, potentially facing challenges when human preferences are inconsistent or non-transitive~\cite{bib:Tversky1969}.
+
+\subsection{Other Preference Optimization Approaches}
+Beyond RLHF and DPO, various methods aim to address preference alignment. Contrastive
+Preference Learning \cite{bib:zhao2023contrastive}, for example, moves away from explicit
+reward modeling, instead leveraging pairwise ranks directly in a contrastive objective function applied to the policy. Others explore
+value-based frameworks or adopt multi-stage processes that iteratively refine outputs with
+human feedback. While these strategies often share the common theme of “learning from partial
+order data,” their implementation details vary widely.
+
+\medskip % Creates a small vertical space before the final paragraph
+\noindent % Ensures the paragraph is not indented
+In the following sections, we delve deeper into Direct Preference Optimization and alternative
+preference-based algorithms. We compare their theoretical foundations, typical outcomes, and
+potential pitfalls, setting the stage for a broader understanding of how human feedback can be
+effectively harnessed to guide large language models.
+
+\section{Literature Review: Evolving Preference Alignment Techniques}
+\label{sec:litreview}
+
+While the pipeline described in Section~\ref{sec:background} represents a standard framework for
+aligning LLMs with preferences, recent literature has introduced several refinements and
+alternatives that either extend or diverge from Reinforcement Learning from Human Feedback (RLHF)
+and Direct Preference Optimization (DPO). This section examines three interconnected themes shaping
+current research: (1) alternate parameterizations of preference models moving beyond simple scalar rewards,
+(2) the use of self-play and iterative schemes to dynamically acquire preference data, and
+(3) methods designed to handle the complexities of real-world feedback, such as partial data coverage and non-transitive preferences.
+
+\subsection{Alternate Preference Parameterizations: Beyond Scalar Rewards}
+A significant limitation of standard reward modeling, including the implicit reward in DPO~\cite{bib:rafailov2023direct} derived from the Bradley--Terry model~\cite{bib:bradley1952rank}, is its reliance on a single scalar reward function which may struggle to capture the full complexity or potential inconsistency of human preferences. Several works aim to overcome this:
+\begin{itemize}
+    \item \textbf{Identity Preference Optimization (IPO)}~\cite{bib:azar2023ipo}: Instead of mapping preferences to an intermediate reward function, IPO proposes to optimize the policy to directly match empirical preference probabilities. By learning the mapping \( (x, y_w, y_l) \rightarrow P(y_w \succ y_l | x) \) without assuming an underlying scalar reward, IPO aims to directly maximize the likelihood of observed human choices. This approach might inherently handle intransitive preferences better than scalar-based methods and potentially mitigates the reward shifting issue related to the partition function normalization implicit in DPO.
+    \item \textbf{Kahneman--Tversky Optimization (KTO)}~\cite{bib:ethayarajh2024kto}: Drawing inspiration from behavioral economics, KTO reformulates the preference objective using principles from prospect theory. It models human utility not just based on absolute outcomes but also relative gains and losses compared to a reference point, aiming to capture known psychological biases. While early results show promise in reproducing human-like decision patterns, KTO introduces additional complexity into the optimization landscape and may require careful calibration.
+\end{itemize}
+These approaches signify a trend towards richer, potentially more robust representations of human preferences compared to the traditional single-scalar reward paradigm common in RLHF.
+
+\subsection{Self-Play and Iterative Fine-Tuning for Data Acquisition}
+Contrasting with methods relying solely on a static, offline preference dataset (\(D\)), another research direction focuses on dynamic data generation through iterative refinement or self-play mechanisms. The core idea is that as the LLM policy (\(\pi_\theta\)) improves, the preference data used for alignment should ideally adapt to reflect its new capabilities and failure modes.
+\begin{itemize}
+    \item \textbf{Self-Play Preference Optimization (SPO)}~\cite{bib:swamy2024spo}: This framework formalizes alignment as a two-player game where the policy aims to maximize its win rate against opponent policies (often previous versions of itself or a reference policy). In each iteration, responses are sampled from the current policy, evaluated (e.g., using an updated preference model or comparing against reference outputs), and this feedback is used to further refine the policy. SPO treats preference maximization as the direct objective, potentially avoiding intermediate reward modeling.
+    \item \textbf{Iterative RLHF/DPO Variants}: Although less formalized than SPO, practical implementations sometimes involve periodically refreshing the preference dataset by collecting new human judgments on outputs from the updated policy, or using AI feedback~\cite{lee2023rlaif}.
+\end{itemize}
+Such iterative schemes offer the potential benefit of improved data coverage over the evolving policy's output distribution and continuous adaptation. However, they introduce significant engineering challenges (e.g., maintaining diverse sampling, efficient feedback collection) and risk exacerbating \emph{distributional shift} if the policy explores regions poorly understood by the preference model or human annotators. This closely relates to the exploration-exploitation trade-off inherent in reinforcement learning.
+
+\subsection{Handling Data Limitations: Partial Coverage and Non-Transitivity}
+Real-world human feedback often deviates from idealized assumptions. Two key challenges are non-transitivity and partial data coverage:
+\begin{itemize}
+    \item \textbf{Non-Transitivity and Contextuality}: As noted by Tversky~\cite{bib:Tversky1969}, human preferences can be intransitive (A > B, B > C, but C > A) or highly context-dependent. Standard models like Bradley--Terry inherently assume transitivity. To address this, recent works explore context-aware reward functions or multi-dimensional utility representations~\cite{bib:yang2024contextual}, allowing preferences to shift based on the specific prompt or scenario. While potentially more realistic, these models increase complexity.
+    \item \textbf{Partial Coverage and Robustness}: Offline datasets (\(D\)) inevitably provide only partial coverage of the vast space of possible model outputs. Optimizing solely on this limited data can lead to overfitting or poor generalization, especially if the policy learns to exploit artifacts in the preference data or reward model. To mitigate this, researchers propose incorporating \emph{pessimism} or \emph{conservative} updates~\cite{bib:calandriello2024ipo-md}. These techniques penalize deviations from the reference policy or add regularization based on data density, aiming to prevent the model from confidently selecting actions in poorly covered regions of the state-action space, thus ensuring safer extrapolation. This connects directly to the coverage issues highlighted as potential failure modes for offline methods like DPO when assumptions break down.
+\end{itemize}
+
+\medskip
+\noindent
+\textbf{Discussion and Open Challenges.} Overall, the literature reflects two primary thrusts: (1) simplifying the alignment pipeline by moving away from explicit RL (e.g., DPO, IPO, CPL~\cite{bib:zhao2023contrastive}), and (2) enriching the representation and acquisition of preference data to better capture the nuances of human values (e.g., KTO, SPO, context-aware models). Significant open questions remain at the intersection of these trends. Is it feasible to develop a unified framework that combines the stability of direct methods with the adaptive data generation of iterative schemes? How can we best manage the fundamental trade-off between alignment \emph{stability} (reducing risks like reward hacking) and data \emph{coverage} (ensuring robustness across diverse inputs and outputs)? Addressing these questions is crucial for developing truly reliable, scalable, and human-aligned LLMs.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+The alignment of large language models (LLMs) with human preferences has become a critical area of research, essential for ensuring the safe and beneficial deployment of these powerful technologies. This review has examined the progress driven primarily by two distinct paradigms: the established, multi-stage Reinforcement Learning from Human Feedback (RLHF)~\cite{bib:christiano2017deep} and the more recent, streamlined Direct Preference Optimization (DPO)~\cite{bib:rafailov2023direct}. The core trade-off highlighted is between the potential adaptability of RLHF, which leverages explicit reward models and online reinforcement learning but faces challenges in stability and cost, and the simplicity and stability of DPO, which offers an elegant offline solution by implicitly encoding reward information within a closed-form objective~\cite{bib:rafailov2023direct}.
+
+This direct optimization approach, along with related offline methods like Contrastive Preference Learning (CPL)~\cite{bib:zhao2023contrastive}, represents a significant shift towards potentially more efficient alignment. Concurrently, the field is exploring richer preference representations beyond simple scalar rewards, as seen in Identity Preference Optimization (IPO)~\cite{bib:azar2023ipo} and Kahneman--Tversky Optimization (KTO)~\cite{bib:ethayarajh2024kto}, which incorporate direct probability matching or insights from behavioral economics, respectively. These parallel developments underscore the ongoing effort to find alignment techniques that are both effective and practical.
+
+Despite these advancements, significant open challenges persist, demanding further investigation. Key among them are:
+\begin{itemize}
+    \item \textbf{Data Coverage and Generalization:} Ensuring that offline preference datasets are sufficiently representative to allow robust generalization remains a primary concern, especially for direct methods like DPO which lack the online adaptation inherent in RLHF. % Optional: The extrapolation capability highlighted depends crucially on adequate coverage or effective function approximation.
+    \item \textbf{Handling Complex Preferences:} Real-world human feedback is often noisy, context-dependent, and potentially non-transitive~\cite{bib:Tversky1969}. Developing models and algorithms that can gracefully handle such inconsistencies is vital for true alignment.
+    \item \textbf{The Stability-Adaptability Trade-off:} Striking the right balance between the stability offered by offline methods and the adaptability potentially provided by iterative or self-play schemes~\cite{bib:swamy2024spo} remains an open question. Iterative approaches risk computational overhead and distribution shift, while purely offline methods might struggle with novel scenarios.
+    \item \textbf{Evaluation and Safety:} Robust metrics beyond simple win-rates are needed to comprehensively evaluate alignment, encompassing aspects like output diversity, safety, and fairness. Validating these methods against subtle forms of reward hacking or unintended behavioral biases is crucial.
+\end{itemize}
+
+Looking forward, the field may benefit from hybrid approaches that combine the stability and efficiency of direct optimization techniques with the dynamic data gathering and potentially richer feedback signals manageable by reinforcement learning or iterative frameworks. Continued research into scalable preference elicitation, robust optimization under partial coverage, and reliable evaluation protocols will be paramount. Ultimately, refining these alignment tools is not just a technical challenge but a necessary step towards harnessing the capabilities of LLMs in ways that are consistently aligned with diverse and complex human values.
+
+
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Print the bibliography
+%% 
+%% (Optionally) let the bibliography start on a new odd page (odd is only relevant in twoside layout)
+%\cleardoubleoddpage
+\printbibliography
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Begin with the appendix part (all further sections will be appendices)
+% \appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 
+%% Add your appendix sections ...
+%% 
+
+%% Make sure to start the appendix on a new odd page (odd is only relevant in twoside layout)
+%\cleardoubleoddpage
+% \section{An Appendix}
+% \label{app:an-appendix}
+
+% Space for an appendix.
+% You can have more than one appendix section.
+% Appendices are, of course, optional.
+
+
+%% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\cleardoubleoddpage
+
+\end{document}
+\endinput
