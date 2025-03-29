@@ -260,7 +260,7 @@ Recent advances in large-scale language models have highlighted the challenges o
     If the language models can be effectively aligned with human preferences by focusing on methods like Reinforcement Learning from Human Feedback (RLHF) and Direct Preference Optimization (DPO). Key methodological choices that ensure stable training, computational efficiency, and robust, human-aligned outputs, while mitigating issues like reward hacking and instability, are the focus of this inquiry.
 
     \item \textbf{Why is this question important?} \\
-    As highlighted in the provided papers, large language models, when trained solely on next-token prediction, can exhibit unintended and potentially harmful behaviors. Aligning these models with human preferences is crucial for safety, ethical considerations, and ensuring their utility in real-world applications. The ability to steer these models towards desired behaviors is essential for responsible deployment. As stated in \cite{lambert2022illustrating}, "what makes a 'good' text is inherently hard to define as it is subjective and context dependent." Therefore, it is important to align the models with human preferences.
+    As highlighted in the provided papers, large language models, when trained solely on next-token prediction, can exhibit unintended and potentially harmful behaviors. Aligning these models with human preferences is crucial for safety, ethical considerations, and ensuring their utility in real-world applications. The ability to steer these models towards desired behaviors is essential for responsible deployment. As stated in \cite{bib:lambert2022illustrating}, "what makes a 'good' text is inherently hard to define as it is subjective and context dependent." Therefore, it is important to align the models with human preferences.
 
     \item \textbf{What evidence/data (variables) are needed to answer this question?} \\
     To answer this question, diverse preference datasets are essential. These datasets should consist of human annotations (or proxies) that compare model outputs. Key variables include:
@@ -387,12 +387,12 @@ trained reward model $r_\phi$ as the reward signal within a reinforcement learni
 \emph{on-policy} sampling and updates, the model aims to produce outputs that score higher
 under the learned reward function, thus aligning it more closely with user preferences. While
 effective in practice, RLHF can exhibit instability due to the challenges of on-policy sampling at scale, potential reward
-gaming, or calibration issues with the reward model \cite{bib:gao2023scaling}.
+gaming, or calibration issues with the reward model \cite{bib:Gao2023}.
 
 \subsection{Direct Preference Optimization (DPO)}
 \label{sec:background-dpo}
 Direct Preference Optimization (DPO) proposes a \emph{closed-form} approach for transforming
-pairwise preferences directly into policy updates \cite{bib:rafailov2023direct}. Rather than explicitly
+pairwise preferences directly into policy updates \cite{bib:Rafailov2023}. Rather than explicitly
 construct a reward function and then apply RL, DPO leverages an analytical relationship between the optimal RLHF policy and the underlying reward function. It shows that under the typical KL-constrained RLHF objective, the optimal policy can be derived directly from the preference data using a simple classification-like loss, effectively bypassing the need for explicit reward modeling and iterative on-policy rollouts.
 The model can be updated directly using the offline preference dataset $D$. Early results
 suggest that DPO simplifies the training pipeline significantly while maintaining or exceeding
@@ -402,7 +402,7 @@ Bradley--Terry preference model, potentially facing challenges when human prefer
 
 \subsection{Other Preference Optimization Approaches}
 Beyond RLHF and DPO, various methods aim to address preference alignment. Contrastive
-Preference Learning \cite{bib:zhao2023contrastive}, for example, moves away from explicit
+Preference Learning \cite{bib:Zhao2023}, for example, moves away from explicit
 reward modeling, instead leveraging pairwise ranks directly in a contrastive objective function applied to the policy. Others explore
 value-based frameworks or adopt multi-stage processes that iteratively refine outputs with
 human feedback. While these strategies often share the common theme of “learning from partial
@@ -427,7 +427,7 @@ current research: (1) alternate parameterizations of preference models moving be
 (3) methods designed to handle the complexities of real-world feedback, such as partial data coverage and non-transitive preferences.
 
 \subsection{Alternate Preference Parameterizations: Beyond Scalar Rewards}
-A significant limitation of standard reward modeling, including the implicit reward in DPO~\cite{bib:rafailov2023direct} derived from the Bradley--Terry model~\cite{bib:bradley1952rank}, is its reliance on a single scalar reward function which may struggle to capture the full complexity or potential inconsistency of human preferences. Several works aim to overcome this:
+A significant limitation of standard reward modeling, including the implicit reward in DPO~\cite{bib:Rafailov2023} derived from the Bradley--Terry model~\cite{bib:bradley1952rank}, is its reliance on a single scalar reward function which may struggle to capture the full complexity or potential inconsistency of human preferences. Several works aim to overcome this:
 \begin{itemize}
     \item \textbf{Identity Preference Optimization (IPO)}~\cite{bib:azar2023ipo}: Instead of mapping preferences to an intermediate reward function, IPO proposes to optimize the policy to directly match empirical preference probabilities. By learning the mapping \( (x, y_w, y_l) \rightarrow P(y_w \succ y_l | x) \) without assuming an underlying scalar reward, IPO aims to directly maximize the likelihood of observed human choices. This approach might inherently handle intransitive preferences better than scalar-based methods and potentially mitigates the reward shifting issue related to the partition function normalization implicit in DPO.
     \item \textbf{Kahneman--Tversky Optimization (KTO)}~\cite{bib:ethayarajh2024kto}: Drawing inspiration from behavioral economics, KTO reformulates the preference objective using principles from prospect theory. It models human utility not just based on absolute outcomes but also relative gains and losses compared to a reference point, aiming to capture known psychological biases. While early results show promise in reproducing human-like decision patterns, KTO introduces additional complexity into the optimization landscape and may require careful calibration.
@@ -451,14 +451,14 @@ Real-world human feedback often deviates from idealized assumptions. Two key cha
 
 \medskip
 \noindent
-\textbf{Discussion and Open Challenges.} Overall, the literature reflects two primary thrusts: (1) simplifying the alignment pipeline by moving away from explicit RL (e.g., DPO, IPO, CPL~\cite{bib:zhao2023contrastive}), and (2) enriching the representation and acquisition of preference data to better capture the nuances of human values (e.g., KTO, SPO, context-aware models). Significant open questions remain at the intersection of these trends. Is it feasible to develop a unified framework that combines the stability of direct methods with the adaptive data generation of iterative schemes? How can we best manage the fundamental trade-off between alignment \emph{stability} (reducing risks like reward hacking) and data \emph{coverage} (ensuring robustness across diverse inputs and outputs)? Addressing these questions is crucial for developing truly reliable, scalable, and human-aligned LLMs.
+\textbf{Discussion and Open Challenges.} Overall, the literature reflects two primary thrusts: (1) simplifying the alignment pipeline by moving away from explicit RL (e.g., DPO, IPO, CPL~\cite{bib:Zhao2023}), and (2) enriching the representation and acquisition of preference data to better capture the nuances of human values (e.g., KTO, SPO, context-aware models). Significant open questions remain at the intersection of these trends. Is it feasible to develop a unified framework that combines the stability of direct methods with the adaptive data generation of iterative schemes? How can we best manage the fundamental trade-off between alignment \emph{stability} (reducing risks like reward hacking) and data \emph{coverage} (ensuring robustness across diverse inputs and outputs)? Addressing these questions is crucial for developing truly reliable, scalable, and human-aligned LLMs.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-The alignment of large language models (LLMs) with human preferences has become a critical area of research, essential for ensuring the safe and beneficial deployment of these powerful technologies. This review has examined the progress driven primarily by two distinct paradigms: the established, multi-stage Reinforcement Learning from Human Feedback (RLHF)~\cite{bib:christiano2017deep} and the more recent, streamlined Direct Preference Optimization (DPO)~\cite{bib:rafailov2023direct}. The core trade-off highlighted is between the potential adaptability of RLHF, which leverages explicit reward models and online reinforcement learning but faces challenges in stability and cost, and the simplicity and stability of DPO, which offers an elegant offline solution by implicitly encoding reward information within a closed-form objective~\cite{bib:rafailov2023direct}.
+The alignment of large language models (LLMs) with human preferences has become a critical area of research, essential for ensuring the safe and beneficial deployment of these powerful technologies. This review has examined the progress driven primarily by two distinct paradigms: the established, multi-stage Reinforcement Learning from Human Feedback (RLHF)~\cite{bib:Christiano2017} and the more recent, streamlined Direct Preference Optimization (DPO)~\cite{bib:Rafailov2023}. The core trade-off highlighted is between the potential adaptability of RLHF, which leverages explicit reward models and online reinforcement learning but faces challenges in stability and cost, and the simplicity and stability of DPO, which offers an elegant offline solution by implicitly encoding reward information within a closed-form objective~\cite{bib:Rafailov2023}.
 
-This direct optimization approach, along with related offline methods like Contrastive Preference Learning (CPL)~\cite{bib:zhao2023contrastive}, represents a significant shift towards potentially more efficient alignment. Concurrently, the field is exploring richer preference representations beyond simple scalar rewards, as seen in Identity Preference Optimization (IPO)~\cite{bib:azar2023ipo} and Kahneman--Tversky Optimization (KTO)~\cite{bib:ethayarajh2024kto}, which incorporate direct probability matching or insights from behavioral economics, respectively. These parallel developments underscore the ongoing effort to find alignment techniques that are both effective and practical.
+This direct optimization approach, along with related offline methods like Contrastive Preference Learning (CPL)~\cite{bib:Zhao2023}, represents a significant shift towards potentially more efficient alignment. Concurrently, the field is exploring richer preference representations beyond simple scalar rewards, as seen in Identity Preference Optimization (IPO)~\cite{bib:azar2023ipo} and Kahneman--Tversky Optimization (KTO)~\cite{bib:ethayarajh2024kto}, which incorporate direct probability matching or insights from behavioral economics, respectively. These parallel developments underscore the ongoing effort to find alignment techniques that are both effective and practical.
 
 Despite these advancements, significant open challenges persist, demanding further investigation. Key among them are:
 \begin{itemize}
