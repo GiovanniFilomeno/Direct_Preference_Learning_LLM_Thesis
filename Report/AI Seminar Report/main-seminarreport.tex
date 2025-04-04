@@ -176,7 +176,7 @@
 %% 
 
 %% Command \title{title}: sets the title of your report
-\title{Your Language Modell is Secretly a Reward Model}
+\title{Your Language Model is Secretly a Reward Model}
 
 %% Command \titleshort{short title}: sets an abbreviated version of the report title for page heads
 %\titleshort{Optional space for your abbreviated title}
@@ -282,7 +282,7 @@ Recent advances in large-scale language models have highlighted the challenges o
         \item Automated evaluation: Using models (e.g., GPT-4) as proxies for human judgment. 
         \item RL Pipelines: Implementing RLHF, which involves training a reward model and using it to optimize the language model's policy.
         \item  DPO: Directly optimizing the policy using preference data through a classification loss, as described in \cite{bib:Rafailov2023}.
-        \item Constrastive Preference Learning Learning directly from preferences without explicitly learning a reward function, as shown in \cite{bib:Zhao2023}.
+        \item Contrastive Preference Learning Learning directly from preferences without explicitly learning a reward function, as shown in \cite{bib:Zhao2023}.
         \item Self-Play Preference Optimization: Using the model to generate its own training data.
     \end{itemize}
 
@@ -330,7 +330,7 @@ suffer from high computational overhead or reward gaming~\cite{bib:Gao2023}.
 
 An alternative family of methods focuses on learning directly from preference data without explicit
 reinforcement loops. Notably, \emph{Direct Preference Optimization (DPO)}~\cite{bib:Rafailov2023}
-proposes to reparameterize the reward function in a way that yields an optimal policy in closed form,
+proposes to re-parametrize the reward function in a way that yields an optimal policy in closed form,
 effectively turning the traditional RLHF pipeline into a more stable, single-stage procedure. Recent
 studies show that DPO can match or exceed the performance of RLHF on tasks such as summarization
 or sentiment control, while mitigating some of the complexities inherent in policy-gradient methods
