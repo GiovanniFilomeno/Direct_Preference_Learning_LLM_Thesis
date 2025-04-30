@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import time
 import torch
 import torch.nn as nn
+from collections import deque
 
 random.seed(1)
 
@@ -63,6 +64,140 @@ def intersect(p1, p2, q1, q2):
         else:
             return False
         
+def point_segment_distance(p, a, b):
+    ab = b - a
+    t  = np.clip(np.dot(p - a, ab) / np.dot(ab, ab), 0.0, 1.0)
+    proj = a + t * ab
+    return np.linalg.norm(p - proj)
+
+# ------------------------------------------------------------------
+# helper: distanza dal muro più vicino
+# ------------------------------------------------------------------
+def dist_to_wall_exact(env, x, y):
+    p = np.array([x, y])
+    dmin = np.inf
+    for seg in env.worldlines:           # [x1,x2,y1,y2]
+        a = np.array([seg[0], seg[2]])
+        b = np.array([seg[1], seg[3]])
+        dmin = min(dmin, point_segment_distance(p, a, b))
+    return dmin            # [0..1]
+        
+# maze_env.py  (fuori dalla classe)
+
+def compute_dead_end_mask(maze, exits=None):
+    """
+    Ritorna una matrice booleana (ny, nx):
+        True  -> cella in un vicolo cieco
+        False -> cella su percorso 'buono' (raggiunge bordo o goal)
+    """
+    nx, ny = maze.nx, maze.ny
+    if exits is None:
+        exits = set()
+    # ---------------------------------------
+    # 1) costruiamo lista adiacenze + grado
+    # ---------------------------------------
+    neigh = {}
+    deg   = np.zeros((ny, nx), dtype=int)
+
+    for y in range(ny):
+        for x in range(nx):
+            cell = maze.cell_at(x, y)
+            nbs  = []
+            if not cell.walls["N"]: nbs.append((x,   y-1))
+            if not cell.walls["S"]: nbs.append((x,   y+1))
+            if not cell.walls["W"]: nbs.append((x-1, y))
+            if not cell.walls["E"]: nbs.append((x+1, y))
+            neigh[(x, y)] = nbs
+            deg[y, x]     = len(nbs)
+
+    # celle di bordo -> uscite “buone”
+    for x in range(nx):
+        exits.add((x, 0))
+        exits.add((x, ny-1))
+    for y in range(ny):
+        exits.add((0, y))
+        exits.add((nx-1, y))
+
+    # ---------------------------------------
+    # 2) potatura foglie non-uscite
+    # ---------------------------------------
+    dead = np.zeros((ny, nx), dtype=bool)
+    Q = deque([(j, i)          # (x, y)
+           for (i, j), d in np.ndenumerate(deg) if d == 1 and (j, i) not in exits])
+
+
+    while Q:
+        x, y = Q.popleft()
+        if dead[y, x]:
+            continue
+        dead[y, x] = True
+        # riduci il grado dei vicini
+        for nx_, ny_ in neigh[(x, y)]:
+            if dead[ny_, nx_]:               # già potata
+                continue
+            deg[ny_, nx_] -= 1
+            if deg[ny_, nx_] == 1 and (nx_, ny_) not in exits:
+                Q.append((nx_, ny_))
+
+    return dead
+
+# ---------------------------------------------------------------
+# mask di corridoi orizzontali chiusi sopra e sotto
+# ---------------------------------------------------------------
+def compute_horizontal_corridor_mask(maze):
+    nx, ny = maze.nx, maze.ny
+    mask = np.zeros((ny, nx), dtype=bool)
+
+    for y in range(ny):
+        x = 0
+        while x < nx:
+            cell = maze.cell_at(x, y)
+            # inizia solo se quella cella è chiusa sopra e sotto
+            if cell.walls["N"] and cell.walls["S"]:
+                # individua tutto il segmento continuativo (N=S=True)
+                x_start = x
+                while x < nx and maze.cell_at(x, y).walls["N"] and maze.cell_at(x, y).walls["S"]:
+                    x += 1
+                x_end = x - 1          # ultima inclusa
+
+                # se alle estremità troviamo muri W/E → è davvero chiuso
+                left_wall  = maze.cell_at(x_start, y).walls["W"]
+                right_wall = maze.cell_at(x_end,   y).walls["E"]
+                if left_wall and right_wall:
+                    mask[y, x_start:x_end+1] = True
+            else:
+                x += 1
+    return mask
+
+# ---------------------------------------------------------------
+# helper: matrice del grado "traversabile"
+# ---------------------------------------------------------------
+def compute_degree_matrix(maze):
+    nx, ny = maze.nx, maze.ny
+    deg = np.zeros((ny, nx), dtype=np.int8)
+
+    def open_both(c1, c2, w1, w2):
+        return (not c1.walls[w1]) and (not c2.walls[w2])
+
+    for y in range(ny):
+        for x in range(nx):
+            c = maze.cell_at(x, y)
+            d = 0
+            # nord
+            if y > 0 and open_both(c, maze.cell_at(x, y-1), "N", "S"):
+                d += 1
+            # sud
+            if y < ny-1 and open_both(c, maze.cell_at(x, y+1), "S", "N"):
+                d += 1
+            # ovest
+            if x > 0 and open_both(c, maze.cell_at(x-1, y), "W", "E"):
+                d += 1
+            # est
+            if x < nx-1 and open_both(c, maze.cell_at(x+1, y), "E", "W"):
+                d += 1
+            deg[y, x] = d
+    return deg
+
 
 def generate_world(sz_fac, maze):
     # Generates a list of lines corresponding to the environment boundaries for intersection checking.
