@@ -254,14 +254,30 @@ def draw_map(sz_fac, maze, ax=None, alpha=0.5, prints=None):
 from gymnasium import Env
 
 # Define the Policy Network class for DPO
+# Define the Policy Network with configurable depth, hidden size, and dropout
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim=2, hidden_dim=32, num_layers=3):
+    def __init__(self, input_dim=2, hidden_dim=128, num_layers=2, dropout_prob=0.0):
         super(PolicyNetwork, self).__init__()
-        layers = [nn.Linear(input_dim, hidden_dim), nn.ReLU()]
+        
+        layers = []
+        
+        # First layer
+        layers.append(nn.Linear(input_dim, hidden_dim))
+        layers.append(nn.ReLU())
+        # Add dropout if dropout_prob > 0
+        if dropout_prob > 0:
+            layers.append(nn.Dropout(dropout_prob))
+        
+        # Hidden layers
         for _ in range(num_layers - 1):
             layers.append(nn.Linear(hidden_dim, hidden_dim))
             layers.append(nn.ReLU())
+            if dropout_prob > 0:
+                layers.append(nn.Dropout(dropout_prob))
+        
+        # Output layer
         layers.append(nn.Linear(hidden_dim, 1))
+        
         self.network = nn.Sequential(*layers)
     
     def forward(self, x):
@@ -272,7 +288,7 @@ class MazeEnv(Env):
                  goal=np.array([1.0, 1.0]),
                  reward="distance", log=False, eval=False,
                  dt=0.03, horizon=5, wall_penalty=10, slide=1, image_freq=20,
-                 use_dpo=False, dpo_model_path="best_dpo_policy.pth"):
+                 use_dpo=False, dpo_model_path="best_dpo_policy.pth", hidden_dim=32, num_layers=3, dropout_prob=0.0):
 
         nx, ny = sz, sz
         self.sz = sz
@@ -331,7 +347,8 @@ class MazeEnv(Env):
         self.use_dpo = use_dpo
         if self.use_dpo:
             self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-            self.policy_net = PolicyNetwork().to(self.device)
+            self.policy_net = PolicyNetwork(hidden_dim=hidden_dim, 
+                                            num_layers=num_layers, dropout_prob=dropout_prob).to(self.device)
             self.policy_net.load_state_dict(torch.load(dpo_model_path, map_location=self.device))
             self.policy_net.eval()
 
