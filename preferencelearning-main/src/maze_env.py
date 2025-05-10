@@ -323,7 +323,7 @@ class MazeEnv(Env):
         self.counter = 0
         self.horizon = horizon
 
-        npoints = 25
+        npoints = 50
         self.maze.make_maze_fail()
 
         self.worldlines = generate_world(1 / self.sz, self.maze)
@@ -354,6 +354,18 @@ class MazeEnv(Env):
 
     def evaluate_state_with_dpo(self, state):
         state_tensor = torch.tensor(state, dtype=torch.float32).to(self.device)
+
+        # -----------------------------------------------------------
+        #  --- costanti usate nel training ---
+        MEAN = torch.tensor([0.5, 0.5],  dtype=torch.float32, device=self.device)
+        STD  = torch.tensor([0.289, 0.289], dtype=torch.float32, device=self.device)
+
+        def _std(x: torch.Tensor) -> torch.Tensor:
+            """centra e scala come nel training"""
+            return (x - MEAN) / STD
+
+        state_tensor = _std(state_tensor)  
+        # -----------------------------------------------------------
         return self.policy_net(state_tensor).item()
     
     # Funzione per generare uno stato aperto continuo

@@ -20,9 +20,13 @@ class TestMazeEnv(unittest.TestCase):
         maze = Maze(10, 10, 0, 0) # inizializzazione del labirinto 10x10 dimensione e 0-0 punto iniziale
         self.start_test = np.array([0.05, 0.05])
         # inizializza l'ambiente: sz=10 (dimensione griglia), start/goal sono le posizioni iniziali e finali 
+        hidden_dim = 64
+        num_layers = 4
+        dropout_prob = 0.2
+        
         self.env = MazeEnv(sz=10, maze=maze, start=self.start_test, goal=np.array([0.95, 0.95]),
                  reward="distance", log=False, eval=False, dt=0.1, horizon=500, 
-                 wall_penalty=10, slide=1, image_freq=100, use_dpo=True, dpo_model_path="../src/best_dpo_policy.pth") 
+                 wall_penalty=10, slide=1, image_freq=100, use_dpo=True, dpo_model_path="../src/best_dpo_policy.pth", hidden_dim=hidden_dim, num_layers=num_layers, dropout_prob=dropout_prob) 
         self.env.reset(state=self.start_test)
 
     def test_step(self):
