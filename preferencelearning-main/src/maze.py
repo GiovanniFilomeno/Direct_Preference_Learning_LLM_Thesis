@@ -14,6 +14,15 @@ class Maze:
         self.grid = [[Cell() for _il  in range(nx)] for _ in range(ny)]  # Initialize the maze grid
         self.make_maze()
 
+    def is_wall(self, cx: int, cy: int) -> bool:
+        """
+        Ritorna True se la cella (cx,cy) è completamente chiusa da muri
+        in tutte e 4 le direzioni.  Utile per algoritmi di path‑finding
+        grossolani che trattano le celle come passaggi/discese.
+        """
+        cell = self.cell_at(cx, cy)
+        return all(cell.walls.values())    
+
     def make_maze(self):
         # Simple maze generation algorithm (e.g., recursive division, random walk, etc.)
         # Here, we'll use a placeholder for a simple maze generation

@@ -345,40 +345,82 @@ class MazeEnv(Env):
         self.cb = None
 
         self.use_dpo = use_dpo
+        # if self.use_dpo:
+        #     self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        #     self.policy_net = PolicyNetwork(hidden_dim=hidden_dim, 
+        #                                     num_layers=num_layers, dropout_prob=dropout_prob).to(self.device)
+        #     self.policy_net.load_state_dict(torch.load(dpo_model_path, map_location=self.device))
+        #     self.policy_net.eval()
+
         if self.use_dpo:
             self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-            self.policy_net = PolicyNetwork(hidden_dim=hidden_dim, 
-                                            num_layers=num_layers, dropout_prob=dropout_prob).to(self.device)
-            self.policy_net.load_state_dict(torch.load(dpo_model_path, map_location=self.device))
+            # --- carica rete ---
+            self.policy_net = PolicyNetwork(hidden_dim=hidden_dim,
+                                            num_layers=num_layers,
+                                            dropout_prob=dropout_prob).to(self.device)
+            self.policy_net.load_state_dict(torch.load(dpo_model_path,
+                                                       map_location=self.device))
             self.policy_net.eval()
-
+            # --- carica una sola volta le stats ---
+            stats = np.load("../tests/norm_stats.npz")           # stesso file del training
+            self._mean = torch.tensor(stats["mean"], dtype=torch.float32,
+                                       device=self.device)
+            self._std  = torch.tensor(stats["std"] + 1e-8, dtype=torch.float32,
+                                       device=self.device)
+            
     def evaluate_state_with_dpo(self, state):
-        state_t = torch.tensor(state, dtype=torch.float32, device=self.device)
+            x = (torch.tensor(state, dtype=torch.float32,
+                            device=self.device) - self._mean) / self._std
+            return self.policy_net(x).item()
+    
+    def evaluate_state_with_dpo(self, state):
+        """
+        Valuta lo stato corrente con la rete DPO usando gli
+        attributi precalcolati self._mean / self._std.
+        """
+        # Se non sono già Tensor sul device corretto convertili una
+        # sola volta (puoi farlo nel __init__; qui è solo un esempio).
+        if not torch.is_tensor(self._mean):
+            self._mean = torch.as_tensor(self._mean, dtype=torch.float32,
+                                        device=self.device)
+            self._std  = torch.as_tensor(self._std,  dtype=torch.float32,
+                                        device=self.device)
 
-        # -----------------------------------------------------------
-        #  --- costanti usate nel training ---
-        norm = np.load("../tests/norm_stats.npz")
-        MEAN = norm["mean"].astype(np.float32)     # shape (2,)
-        STD  = norm["std"].astype(np.float32) + 1e-8   # per evitare div/0
+        x_std = (torch.as_tensor(state, dtype=torch.float32,
+                                device=self.device) - self._mean) / self._std
+        with torch.no_grad():
+            return self.policy_net(x_std).item()
 
-        def get_norm_tensors(device):
-            if not hasattr(get_norm_tensors, "_cache"):
-                get_norm_tensors._cache = {}
-            if device not in get_norm_tensors._cache:
-                get_norm_tensors._cache[device] = (
-                    torch.tensor(MEAN, device=device),   # <<== torch sul device giusto
-                    torch.tensor(STD,  device=device)
-                )
-            return get_norm_tensors._cache[device]
 
-        # ---- normalizzazione per l'inferenza ----
-        def _std(x: torch.Tensor) -> torch.Tensor:
-            mean_t, std_t = get_norm_tensors(x.device)   # mai numpy qui
-            return (x - mean_t) / std_t
 
-        state_t = _std(state_t) 
-        # -----------------------------------------------------------
-        return self.policy_net(state_t).item()
+
+    # def evaluate_state_with_dpo(self, state):
+    #     state_t = torch.tensor(state, dtype=torch.float32, device=self.device)
+
+    #     # -----------------------------------------------------------
+    #     #  --- costanti usate nel training ---
+    #     norm = np.load("../tests/norm_stats.npz")
+    #     MEAN = norm["mean"].astype(np.float32)     # shape (2,)
+    #     STD  = norm["std"].astype(np.float32) + 1e-8   # per evitare div/0
+
+    #     def get_norm_tensors(device):
+    #         if not hasattr(get_norm_tensors, "_cache"):
+    #             get_norm_tensors._cache = {}
+    #         if device not in get_norm_tensors._cache:
+    #             get_norm_tensors._cache[device] = (
+    #                 torch.tensor(MEAN, device=device),   # <<== torch sul device giusto
+    #                 torch.tensor(STD,  device=device)
+    #             )
+    #         return get_norm_tensors._cache[device]
+
+    #     # ---- normalizzazione per l'inferenza ----
+    #     def _std(x: torch.Tensor) -> torch.Tensor:
+    #         mean_t, std_t = get_norm_tensors(x.device)   # mai numpy qui
+    #         return (x - mean_t) / std_t
+
+    #     state_t = _std(state_t) 
+    #     # -----------------------------------------------------------
+    #     return self.policy_net(state_t).item()
     
     # Funzione per generare uno stato aperto continuo
     def sample_open_state_continuous(self):
@@ -508,7 +550,11 @@ class MazeEnv(Env):
         self.prev_state = self.state
         self.state = state
         if self.use_dpo:
-            reward = self.evaluate_state_with_dpo(self.state) - penalty
+            # reward = self.evaluate_state_with_dpo(self.state) - penalty
+            new_val  = self.evaluate_state_with_dpo(self.state)
+            prev_val = getattr(self, "_prev_dpo_val", new_val)
+            reward   = (new_val - prev_val) - penalty
+            self._prev_dpo_val = new_val
         else:
             reward = self.reward_fn.get_reward(self.state) - penalty
         self.cur_return += reward
@@ -523,6 +569,9 @@ class MazeEnv(Env):
         infos = {}
 
         if self.counter >= self.horizon:
+            done = True
+
+        if np.linalg.norm(self.state - self.goal) < 0.03:
             done = True
 
         new_pose = self.state + action[0] * self.dt * \
