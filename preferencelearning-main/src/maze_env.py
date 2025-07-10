@@ -24,45 +24,78 @@ def line(x1, x2, y1, y2, alpha, scale, ax):
                    np.array([y1 * scale, y2 * scale]), 
                    'k-', alpha=alpha)
 
-def intersect(p1, p2, q1, q2):
-    """
-    Checks if line segment p1->p2 intersects line segment q1->q2 (2D).
-    Usa la cross in 2D (scalare) al posto di np.cross con padding.
-    """
-    # cross fra (p2-p1) e (q1-p2) etc., tutti scalari
-    cp1 = cross2d(p2 - p1, q1 - p2)
-    cp2 = cross2d(p2 - p1, q2 - p2)
-    cp3 = cross2d(q2 - q1, p1 - q2)
-    cp4 = cross2d(q2 - q1, p2 - q2)
+# def intersect(p1, p2, q1, q2):
+#     """
+#     Checks if line segment p1->p2 intersects line segment q1->q2 (2D).
+#     Usa la cross in 2D (scalare) al posto di np.cross con padding.
+#     """
+#     # cross fra (p2-p1) e (q1-p2) etc., tutti scalari
+#     cp1 = cross2d(p2 - p1, q1 - p2)
+#     cp2 = cross2d(p2 - p1, q2 - p2)
+#     cp3 = cross2d(q2 - q1, p1 - q2)
+#     cp4 = cross2d(q2 - q1, p2 - q2)
 
-    # t1 = segno di cp1 * cp2
-    # t2 = segno di cp3 * cp4
-    t1 = cp1 * cp2
-    t2 = cp3 * cp4
+#     # t1 = segno di cp1 * cp2
+#     # t2 = segno di cp3 * cp4
+#     t1 = cp1 * cp2
+#     t2 = cp3 * cp4
 
-    if t1 < 0 and t2 < 0:
-        # se i segmenti 'strisciano' uno sull'altro, si intersecano
-        return True
-    elif t1 > 0 or t2 > 0:
-        # Non si intersecano
-        return False
-    else:
-        # Ora gestiamo il caso in cui cp1, cp2, cp3, cp4 = 0 => collinearità/overlap
-        # Per semplicità, usiamo la logica del codice esistente:
-        # np.dot(...) < 0 e cp1 == 0, ecc. 
-        # Stavolta cp1, cp2, cp3, cp4 sono semplici float
-        dot1 = np.dot(p1 - q1, p2 - q1)
-        dot2 = np.dot(p1 - q2, p2 - q2)
-        dot3 = np.dot(q1 - p1, q2 - p1)
-        dot4 = np.dot(q1 - p2, q2 - p2)
-        # Controllo collinearità
-        if (dot1 < 0 and cp1 == 0) or \
-           (dot2 < 0 and cp2 == 0) or \
-           (dot3 < 0 and cp3 == 0) or \
-           (dot4 < 0 and cp4 == 0):
-            return True
+#     if t1 < 0 and t2 < 0:
+#         # se i segmenti 'strisciano' uno sull'altro, si intersecano
+#         return True
+#     elif t1 > 0 or t2 > 0:
+#         # Non si intersecano
+#         return False
+#     else:
+#         # Ora gestiamo il caso in cui cp1, cp2, cp3, cp4 = 0 => collinearità/overlap
+#         # Per semplicità, usiamo la logica del codice esistente:
+#         # np.dot(...) < 0 e cp1 == 0, ecc. 
+#         # Stavolta cp1, cp2, cp3, cp4 sono semplici float
+#         dot1 = np.dot(p1 - q1, p2 - q1)
+#         dot2 = np.dot(p1 - q2, p2 - q2)
+#         dot3 = np.dot(q1 - p1, q2 - p1)
+#         dot4 = np.dot(q1 - p2, q2 - p2)
+#         # Controllo collinearità
+#         if (dot1 < 0 and cp1 == 0) or \
+#            (dot2 < 0 and cp2 == 0) or \
+#            (dot3 < 0 and cp3 == 0) or \
+#            (dot4 < 0 and cp4 == 0):
+#             return True
+#         else:
+#             return False
+
+# maze_env.py  – sostituisci intersect() con la versione ‘strict’
+def intersect(p1, p2, q1, q2, *, strict=False, eps=1e-9):
+    """
+    True se i segmenti p1–p2 e q1–q2 si intersecano.
+    Con strict=False l’intersezione su un estremo comune NON conta.
+    """
+    def cross(a, b):   # 2‑D
+        return a[0]*b[1] - a[1]*b[0]
+
+    r, s = p2 - p1, q2 - q1
+    rxs  = cross(r, s)
+    q_p  = q1 - p1
+    qpxr = cross(q_p, r)
+
+    if abs(rxs) < eps and abs(qpxr) < eps:          # collineari
+        t0 = np.dot(q1 - p1, r) / np.dot(r, r)
+        t1 = np.dot(q2 - p1, r) / np.dot(r, r)
+        t0, t1 = min(t0, t1), max(t0, t1)
+        if strict:
+            return t0 < 1-eps and t1 > eps          # vero overlap
         else:
-            return False
+            return t0 < 1+eps and t1 > -eps         # include estremi
+    if abs(rxs) < eps:                              # paralleli
+        return False
+
+    t = cross(q_p, s) / rxs
+    u = cross(q_p, r) / rxs
+    if strict:
+        return (eps < t < 1-eps) and (eps < u < 1-eps)
+    else:
+        return (0-eps <= t <= 1+eps) and (0-eps <= u <= 1+eps)
+
         
 def point_segment_distance(p, a, b):
     ab = b - a
@@ -490,6 +523,16 @@ class MazeEnv(Env):
                 return True
         return False
     
+    # maze_env.py  – nuova funzione: collisione segmento‑segmento
+    def segment_collision(self, p_from, p_to):
+        """True se il segmento p_from→p_to interseca un muro."""
+        for seg in self.worldlines:          # [x1,x2,y1,y2] già scalato
+            if intersect(p_from, p_to,
+                        seg[[0, 2]],        # q1
+                        seg[[1, 3]], strict=True):       # q2
+                return True
+        return False
+    
     def point_collision(self, x, y, epsilon=0.001):
         """
         Return True if the point (x,y) is invalid because:
@@ -554,6 +597,12 @@ class MazeEnv(Env):
             new_val  = self.evaluate_state_with_dpo(self.state)
             prev_val = getattr(self, "_prev_dpo_val", new_val)
             reward   = (new_val - prev_val) - penalty
+            d = np.linalg.norm(self.state - self.goal)
+            reward += 5 * np.exp(-d / 0.02)         # graduale, sempre positiva
+
+            # if np.linalg.norm(self.state - self.goal) < 0.03:
+            #     reward += 100         # o un shaping continuo: -λ*dist_to_goal
+
             self._prev_dpo_val = new_val
         else:
             reward = self.reward_fn.get_reward(self.state) - penalty
@@ -561,7 +610,7 @@ class MazeEnv(Env):
         self.episode.append(state)
         return state, reward, done, False, infos
 
-    def step(self, action):
+    def step(self, action, epsilon_goal=0.03):
         print(f"Step called. Counter: {self.counter}, Horizon: {self.horizon}")
         action = np.clip(action, -1, 1)
         self.counter += 1
@@ -571,7 +620,7 @@ class MazeEnv(Env):
         if self.counter >= self.horizon:
             done = True
 
-        if np.linalg.norm(self.state - self.goal) < 0.03:
+        if np.linalg.norm(self.state - self.goal) < epsilon_goal:
             done = True
 
         new_pose = self.state + action[0] * self.dt * \
