@@ -1,0 +1,20 @@
+{
+  "test_id": "B5_gate_strong",
+  "n_points": 4130,
+  "n_pairs": 114897,
+  "training": {
+    "best_val": 0.0328897258059846,
+    "test_accuracy": 0.9368146214099217
+  },
+  "solve": {
+    "dpo_steps_to_goal": -1,
+    "baseline_steps_to_goal": -1
+  },
+  "paths": {
+    "positions": "/Users/Q540900/Desktop/Direct_Preference_Learning_LLM_Thesis/preferencelearning-main/comparison/outputs/B5_gate_strong/positions.parquet",
+    "preferences": "/Users/Q540900/Desktop/Direct_Preference_Learning_LLM_Thesis/preferencelearning-main/comparison/outputs/B5_gate_strong/preferences.parquet",
+    "model": "/Users/Q540900/Desktop/Direct_Preference_Learning_LLM_Thesis/preferencelearning-main/comparison/outputs/B5_gate_strong/best_dpo_policy.pth",
+    "loss_plot": "/Users/Q540900/Desktop/Direct_Preference_Learning_LLM_Thesis/preferencelearning-main/comparison/outputs/B5_gate_strong/training_losses.png",
+    "comparison_plot": "/Users/Q540900/Desktop/Direct_Preference_Learning_LLM_Thesis/preferencelearning-main/comparison/outputs/B5_gate_strong/comparison.png"
+  }
+}
