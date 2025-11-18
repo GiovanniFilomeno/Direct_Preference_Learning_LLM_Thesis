@@ -145,6 +145,46 @@ def _can_move(env: MazeEnv, cx: int, cy: int, nx: int, ny: int) -> bool:
             return False
     return True
 
+from collections import deque
+
+def _shortest_path_cells(env, s):
+    cx = min(max(int(s[0]*env.sz), 0), env.maze.nx-1)
+    cy = min(max(int(s[1]*env.sz), 0), env.maze.ny-1)
+    gx = min(max(int(env.goal[0]*env.sz), 0), env.maze.nx-1)
+    gy = min(max(int(env.goal[1]*env.sz), 0), env.maze.ny-1)
+
+    def _can_move(cx, cy, nx, ny):
+        if nx < 0 or nx >= env.maze.nx or ny < 0 or ny >= env.maze.ny: return False
+        if all(env.maze.cell_at(nx, ny).walls.values()): return False
+        c, n = env.maze.cell_at(cx, cy), env.maze.cell_at(nx, ny)
+        dx, dy = nx - cx, ny - cy
+        if   dx==0 and dy==-1 and (c.walls["N"] or n.walls["S"]): return False
+        if   dx==0 and dy== 1 and (c.walls["S"] or n.walls["N"]): return False
+        if   dx== 1 and dy==0  and (c.walls["E"] or n.walls["W"]): return False
+        if   dx==-1 and dy==0  and (c.walls["W"] or n.walls["E"]): return False
+        return True
+
+    dist = { (cx,cy): 0 }
+    Q = deque([(cx,cy)])
+    while Q:
+        ux, uy = Q.popleft()
+        if (ux,uy) == (gx,gy): break
+        for dx,dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+            vx, vy = ux+dx, uy+dy
+            if not _can_move(ux, uy, vx, vy): continue
+            if (vx,vy) not in dist:
+                dist[(vx,vy)] = dist[(ux,uy)] + 1
+                Q.append((vx,vy))
+    return dist.get((gx,gy), np.inf)
+
+def _gate_x_for_row(env, y: float) -> float:
+    row = min(max(int(y * env.sz), 0), env.maze.ny - 1)
+    block = row // 3  # serpentina con step=3
+    return 1.0 if (block % 2 == 0) else 0.0
+
+def _dist_to_gate_state(env, s: np.ndarray) -> float:
+    return abs(s[0] - _gate_x_for_row(env, s[1]))
+
 def _shortest_path_distance(env: MazeEnv, x: float, y: float) -> float:
     """Costo in passi di cella dal punto continuo (x,y) alla cella goal via BFS/A* leggera."""
     cx, cy = min(int(x * env.sz), env.maze.nx - 1), min(int(y * env.sz), env.maze.ny - 1)
@@ -532,72 +572,138 @@ def _to_std_tensor(x: np.ndarray, env_dpo: MazeEnv, device) -> "torch.Tensor":
     x_t = torch.as_tensor(x, dtype=torch.float32, device=device)
     return (x_t - mean_t) / std_t
 
-def _policy_dpo_two_step_safe(env: MazeEnv, device, tol_val=1e-3, tol_dist=1e-3) -> np.ndarray:
-    """Beam-like 2-step lookahead con tie-breaker sulla distanza, solo mosse legali."""
+def _policy_baseline_lexico(env, tol=1e-6):
+    acts = _candidate_actions(env)
+    next_states = env.state + np.stack(
+        [acts[:,0]*np.cos(acts[:,1]*np.pi)*env.dt,
+         acts[:,0]*np.sin(acts[:,1]*np.pi)*env.dt], axis=1
+    )
+    # mosse lecite secondo lo step
+    legal = [i for i in range(len(acts)) if not env.collision(next_states[i])]
+    if not legal:
+        return np.zeros(2, dtype=np.float32)
+
+    d0 = float(np.linalg.norm(env.goal - env.state))
+    paths = np.array([_shortest_path_cells(env, next_states[i]) for i in legal])
+    dists = np.array([np.linalg.norm(env.goal - next_states[i]) for i in legal])
+
+    # 1) minimizza path
+    pmin = np.min(paths)
+    cand = np.where(paths <= pmin + 1e-9)[0]
+    if len(cand) > 1:
+        # 2) a parità di path, minimizza distanza euclidea
+        idx = cand[np.argmin(dists[cand])]
+    else:
+        idx = cand[0]
+
+    # se nessun miglioramento di path è possibile (pmin == path attuale),
+    # usa fallback gate-aware evitando ping-pong
+    p0 = _shortest_path_cells(env, env.state)
+    if pmin >= p0 - 1e-9:
+        best, best_g = None, np.inf
+        for j in legal:
+            g = _dist_to_gate_state(env, next_states[j])
+            if g < best_g:
+                best_g, best = g, j
+        if best is not None:
+            idx = best
+
+    return acts[legal[idx]]
+
+
+def _policy_dpo_two_step_safe(env: MazeEnv, device, tol_val=1e-3, tol_dist=1e-3):
     import torch
     acts = _candidate_actions(env)
+    cur_d = float(np.linalg.norm(env.goal - env.state))
+    p0 = _shortest_path_cells(env, env.state)
+
     next_states_1 = env.state + np.stack(
         [acts[:,0]*np.cos(acts[:,1]*np.pi)*env.dt,
-         acts[:,0]*np.sin(acts[:,1]*np.pi)*env.dt],
-        axis=1
+         acts[:,0]*np.sin(acts[:,1]*np.pi)*env.dt], axis=1
     )
+    legal1 = [i for i in range(len(acts)) if not env.collision(next_states_1[i])]
+    if not legal1:
+        return np.zeros(2, dtype=np.float32)
 
-    # record
-    cur_d = float(np.linalg.norm(env.goal - env.state))
-    best_two_score, best_two_d, best_two_action = -np.inf, cur_d, None
-    best_one_score, best_one_d, best_one_action = -np.inf, cur_d, None
+    # tieni sia la 'key' per il confronto (score, -path, -dist)
+    # sia i dati "reali" (score, path, dist) per la decisione
+    best_two, best_two_key, best_two_data = None, None, None
+    best_one, best_one_key, best_one_data = None, None, None
 
     with torch.no_grad():
-        for i, s1 in enumerate(next_states_1):
-            if not _is_legal(env, env.state, s1):
-                continue
+        for i in legal1:
+            s1 = next_states_1[i]
+            # secondo passo
             s2_all = s1 + np.stack(
                 [acts[:,0]*np.cos(acts[:,1]*np.pi)*env.dt,
-                 acts[:,0]*np.sin(acts[:,1]*np.pi)*env.dt],
-                axis=1
+                 acts[:,0]*np.sin(acts[:,1]*np.pi)*env.dt], axis=1
             )
-            # valuta con rete
             scores = env.policy_net(_to_std_tensor(s2_all, env, device)).cpu().numpy().squeeze()
-            idx_best2 = scores.argmax()
-            two_score = float(scores[idx_best2])
-            s2_best   = s2_all[idx_best2]
 
-            # (A) due passi
-            if _is_legal(env, s1, s2_best):
-                d2 = float(np.linalg.norm(env.goal - s2_best))
-                better_score = two_score > best_two_score + tol_val
-                tie_score    = abs(two_score - best_two_score) <= tol_val
-                better_dist  = d2 < best_two_d - tol_dist
-                if better_score or (tie_score and better_dist):
-                    best_two_score, best_two_d, best_two_action = two_score, d2, acts[i]
+            # scegli il s2 lecito con score max; tie‑break: path min → dist min
+            order = np.argsort(scores)[::-1]
+            chosen = None
+            data_tup = None
+            key_tup  = None
+            for k in order:
+                s2 = s2_all[k]
+                if env.collision(s2):
+                    continue
+                p2 = _shortest_path_cells(env, s2)
+                d2 = float(np.linalg.norm(env.goal - s2))
+                sc = float(scores[k])
+                chosen  = acts[i]
+                data_tup = (sc, p2, d2)
+                key_tup  = (sc, -p2, -d2)  # max su score, min su path/dist
+                break
+            if chosen is None:
+                continue
 
-            # (B) fallback 1 passo (valuto lo stesso two_score che deriva da s2_best)
+            if best_two_key is None or key_tup > best_two_key:
+                best_two, best_two_key, best_two_data = chosen, key_tup, data_tup
+
+            # record a 1 passo (per fallback)
+            p1 = _shortest_path_cells(env, s1)
             d1 = float(np.linalg.norm(env.goal - s1))
-            better_score = two_score > best_one_score + tol_val
-            tie_score    = abs(two_score - best_one_score) <= tol_val
-            better_dist  = d1 < best_one_d - tol_dist
-            if better_score or (tie_score and better_dist):
-                best_one_score, best_one_d, best_one_action = two_score, d1, acts[i]
+            data1 = (data_tup[0], p1, d1)
+            key1  = (data_tup[0], -p1, -d1)
+            if best_one_key is None or key1 > best_one_key:
+                best_one, best_one_key, best_one_data = acts[i], key1, data1
 
-    if best_two_action is not None:
-        return best_two_action
-    if best_one_action is not None:
-        return best_one_action
-    return np.zeros(2, dtype=np.float32)
+    # decisione: usa i valori reali (non negati)
+    if best_two is not None:
+        sc2, p2, d2 = best_two_data
+        if (p2 < p0 - 1e-9) or (d2 < cur_d - tol_dist):
+            return best_two
 
-def _rollout(env: MazeEnv, policy_fn: Callable[[MazeEnv], np.ndarray], max_steps: int, epsilon_goal: float, device=None):
-    traj, dists = [env.state.copy()], [float(np.linalg.norm(env.goal - env.state))]
+    if best_one is not None:
+        sc1, p1, d1 = best_one_data
+        if (p1 < p0 - 1e-9) or (d1 < cur_d - tol_dist):
+            return best_one
+
+    # fallback gate‑aware
+    best, best_g = None, np.inf
+    for i in legal1:
+        s1 = next_states_1[i]
+        g  = _dist_to_gate_state(env, s1)
+        if g < best_g:
+            best_g, best = g, i
+    return acts[best] if best is not None else np.zeros(2, dtype=np.float32)
+
+
+def _rollout(env, policy_fn, max_steps, epsilon_goal, device=None):
+    traj, dists, paths = [env.state.copy()], [float(np.linalg.norm(env.goal - env.state))], [_shortest_path_cells(env, env.state)]
     goal_step = -1
     for step in range(max_steps):
         a = policy_fn(env)
         s_next, _, _, _, _ = env.step(action=a, epsilon_goal=epsilon_goal)
         traj.append(s_next.copy())
-        d = float(np.linalg.norm(env.goal - s_next))
-        dists.append(d)
-        if d < epsilon_goal and goal_step < 0:
+        dists.append(float(np.linalg.norm(env.goal - s_next)))
+        paths.append(_shortest_path_cells(env, s_next))
+        if dists[-1] < epsilon_goal and goal_step < 0:
             goal_step = step + 1
             break
-    return np.array(traj), dists, goal_step
+    return np.array(traj), dists, goal_step, paths
 
 # ---------------------------------------------------------------------
 # Costruzione dataset + training + solving per un esperimento
@@ -693,21 +799,44 @@ def run_experiment(exp: Experiment, outputs_dir: str):
                       hidden_dim=exp.train.hidden_dim, num_layers=exp.train.num_layers, dropout_prob=exp.train.dropout_prob)
     device = "mps" if (hasattr(__import__('torch').backends, 'mps') and __import__('torch').backends.mps.is_available()) else "cpu"
 
+    # -- subito dopo dpo_env = MazeEnv(... use_dpo=True, ...)
+    import torch
+    stats_path = os.path.join(TESTS_DIR, "norm_stats.npz")  # <repo>/tests/norm_stats.npz
+    if os.path.isfile(stats_path):
+        _norm = np.load(stats_path)
+        dpo_env._mean = torch.tensor(_norm["mean"], dtype=torch.float32, device=dpo_env.device)
+        dpo_env._std  = torch.tensor(_norm["std"] + 1e-8, dtype=torch.float32, device=dpo_env.device)
+    else:
+        print(f"⚠️  Norm stats non trovate in {stats_path} — la DPO userà ciò che ha caricato MazeEnv.")
+
+
     # baseline env (stesso maze)
     base_env = MazeEnv(sz=10, maze=maze, start=np.array([0.05,0.05]),
                        goal=np.array([0.95,0.95]), reward="distance",
                        dt=exp.solve.dt, horizon=exp.solve.horizon_base, slide=1, use_dpo=False)
 
-    traj_dpo, dist_dpo, iter_dpo = _rollout(dpo_env, lambda e: _policy_dpo_two_step_safe(e, device=device),
-                                            max_steps=exp.solve.horizon_dpo, epsilon_goal=exp.solve.epsilon_goal)
-    traj_base, dist_base, iter_base = _rollout(base_env, _policy_dist_safe,
-                                               max_steps=exp.solve.horizon_base, epsilon_goal=exp.solve.epsilon_goal)
+    # traj_dpo, dist_dpo, iter_dpo = _rollout(dpo_env, lambda e: _policy_dpo_two_step_safe(e, device=device),
+    #                                         max_steps=exp.solve.horizon_dpo, epsilon_goal=exp.solve.epsilon_goal)
+    # traj_base, dist_base, iter_base = _rollout(base_env, _policy_dist_safe,
+    #                                            max_steps=exp.solve.horizon_base, epsilon_goal=exp.solve.epsilon_goal)
+
+    # DPO
+    traj_dpo, dist_dpo, iter_dpo, path_dpo = _rollout(
+        dpo_env, lambda e: _policy_dpo_two_step_safe(e, device=device),
+        max_steps=exp.solve.horizon_dpo, epsilon_goal=exp.solve.epsilon_goal
+    )
+    # Baseline
+    traj_base, dist_base, iter_base, path_base = _rollout(
+        base_env, _policy_baseline_lexico,
+        max_steps=exp.solve.horizon_base, epsilon_goal=exp.solve.epsilon_goal
+    )
+
 
     # 7) plotting
     fig, axes = plt.subplots(1, 2, figsize=(13,5))
 
-    axes[0].plot(dist_dpo,  label="Preference Policy", lw=2)
-    axes[0].plot(dist_base, label="Baseline", lw=2, ls="--")
+    axes[0].plot(path_dpo,  label="Preference Policy (path)", lw=1)
+    axes[0].plot(path_base, label="Baseline (path)", lw=1, ls=":")
     axes[0].set_xlabel("step"); axes[0].set_ylabel("euclidean distance to goal")
     axes[0].set_title("Distance-to-goal per step", fontsize=14)
     axes[0].legend(); axes[0].grid(True)
@@ -775,7 +904,9 @@ def build_experiments() -> Dict[str, Experiment]:
     base_weights = ScoreWeights(0.3, 0.2, 0.2, 0.8, 0.1)
     base_pairing = PairingConfig(200_000, 0.4, 0.7, 0.05, 0.001, 50_000_000)
     base_train   = TrainConfig(128, 150, 1e-3, 256, 4, 0.05, 10)
-    base_solve   = SolveConfig(0.15, 180, 180, 0.106)
+    # base_solve   = SolveConfig(0.15, 180, 180, 0.106)
+    base_solve = SolveConfig(dt=0.15, horizon_dpo=240, horizon_base=240, epsilon_goal=0.12)
+
 
     E: Dict[str, Experiment] = {}
 
