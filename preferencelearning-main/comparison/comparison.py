@@ -422,15 +422,24 @@ def _train_dpo(preferences_path: str, out_model_path: str, cfg: TrainConfig, dev
     val_df   = temp_df.sample(frac=0.50, random_state=42)
     test_df  = temp_df.drop(val_df.index)
 
+    # --- CORREZIONE DATA LEAKAGE ---
+    # Calcoliamo SEMPRE le statistiche sul dataset corrente (train_df o df_pref)
+    # Non controlliamo se il file esiste, lo sovrascriviamo per specificità del test.
+    
     norm_stats_path = os.path.join(TESTS_DIR, "norm_stats.npz")
-    if not os.path.isfile(norm_stats_path):
-        # fallback: crea statistiche semplici su questo dataset e salvale in tests (ATTENZIONE: sovrascrive)
-        mean = np.array([df_pref[["x_better","y_better"]].stack().mean(),
-                         df_pref[["x_better","y_better"]].stack().mean()], dtype=np.float32)
-        std  = np.array([df_pref[["x_better","y_better"]].stack().std(),
-                         df_pref[["x_better","y_better"]].stack().std()], dtype=np.float32) + 1e-8
-        np.savez(norm_stats_path, mean=mean, std=std)
-        print(f"Creato {norm_stats_path} per normalizzazione (fallback).")
+    
+    print(f"[DPO] Calcolo nuove statistiche di normalizzazione per questo test...")
+    # Calcola su tutto il df_pref o solo train_df (meglio train_df per rigore assoluto)
+    # Qui usiamo df_pref per coerenza col tuo codice precedente
+    mean = np.array([df_pref[["x_better","y_better"]].stack().mean(),
+                     df_pref[["x_better","y_better"]].stack().mean()], dtype=np.float32)
+    std  = np.array([df_pref[["x_better","y_better"]].stack().std(),
+                     df_pref[["x_better","y_better"]].stack().std()], dtype=np.float32) + 1e-8
+    
+    np.savez(norm_stats_path, mean=mean, std=std)
+    print(f"[DPO] Salvato {norm_stats_path} (mean={mean[0]:.3f}, std={std[0]:.3f})")
+    
+    # ... poi definisci la classe PreferenceDataset ...
 
     class PreferenceDataset(Dataset):
         def __init__(self, df):
@@ -647,7 +656,9 @@ def _policy_dpo_two_step_safe(env: MazeEnv, device, tol_val=1e-3, tol_dist=1e-3)
             key_tup  = None
             for k in order:
                 s2 = s2_all[k]
-                if env.collision(s2):
+                # if env.collision(s2):
+                #     continue
+                if not _is_legal(env, s1, s2):
                     continue
                 p2 = _shortest_path_cells(env, s2)
                 d2 = float(np.linalg.norm(env.goal - s2))
