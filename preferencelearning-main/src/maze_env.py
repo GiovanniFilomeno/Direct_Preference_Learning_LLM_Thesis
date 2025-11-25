@@ -524,12 +524,12 @@ class MazeEnv(Env):
         return False
     
     # maze_env.py  – nuova funzione: collisione segmento‑segmento
-    def segment_collision(self, p_from, p_to):
+    def segment_collision(self, p_from, p_to, strict=False):
         """True se il segmento p_from→p_to interseca un muro."""
         for seg in self.worldlines:          # [x1,x2,y1,y2] già scalato
             if intersect(p_from, p_to,
                         seg[[0, 2]],        # q1
-                        seg[[1, 3]], strict=True):       # q2
+                        seg[[1, 3]], strict=strict):       # q2
                 return True
         return False
     
