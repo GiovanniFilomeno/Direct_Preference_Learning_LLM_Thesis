@@ -1,0 +1,22 @@
+{
+  "test_id": "E1_linear_fading",
+  "seed": 2025,
+  "n_points": 6130,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.02428159517342154,
+    "test_accuracy": 0.9649
+  },
+  "solve": {
+    "dpo_steps_to_goal": 33,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "./thesis_gold_run/seed=2025/E1_linear_fading/positions.parquet",
+    "preferences": "./thesis_gold_run/seed=2025/E1_linear_fading/preferences.parquet",
+    "model": "./thesis_gold_run/seed=2025/E1_linear_fading/best_dpo_policy.pth",
+    "norm_stats": "./thesis_gold_run/seed=2025/E1_linear_fading/norm_stats.npz",
+    "loss_plot": "./thesis_gold_run/seed=2025/E1_linear_fading/training_losses.png",
+    "comparison_plot": "./thesis_gold_run/seed=2025/E1_linear_fading/comparison.png"
+  }
+}

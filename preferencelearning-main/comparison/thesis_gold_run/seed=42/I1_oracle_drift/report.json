@@ -1,0 +1,22 @@
+{
+  "test_id": "I1_oracle_drift",
+  "seed": 42,
+  "n_points": 4080,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.013463712450635584,
+    "test_accuracy": 0.993
+  },
+  "solve": {
+    "dpo_steps_to_goal": -1,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "./thesis_gold_run/seed=42/I1_oracle_drift/positions.parquet",
+    "preferences": "./thesis_gold_run/seed=42/I1_oracle_drift/preferences.parquet",
+    "model": "./thesis_gold_run/seed=42/I1_oracle_drift/best_dpo_policy.pth",
+    "norm_stats": "./thesis_gold_run/seed=42/I1_oracle_drift/norm_stats.npz",
+    "loss_plot": "./thesis_gold_run/seed=42/I1_oracle_drift/training_losses.png",
+    "comparison_plot": "./thesis_gold_run/seed=42/I1_oracle_drift/comparison.png"
+  }
+}

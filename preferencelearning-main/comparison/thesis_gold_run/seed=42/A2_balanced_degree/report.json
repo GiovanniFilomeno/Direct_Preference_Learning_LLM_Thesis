@@ -1,0 +1,22 @@
+{
+  "test_id": "A2_balanced_degree",
+  "seed": 42,
+  "n_points": 6040,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.028078027493968795,
+    "test_accuracy": 0.9584
+  },
+  "solve": {
+    "dpo_steps_to_goal": 33,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "./thesis_gold_run/seed=42/A2_balanced_degree/positions.parquet",
+    "preferences": "./thesis_gold_run/seed=42/A2_balanced_degree/preferences.parquet",
+    "model": "./thesis_gold_run/seed=42/A2_balanced_degree/best_dpo_policy.pth",
+    "norm_stats": "./thesis_gold_run/seed=42/A2_balanced_degree/norm_stats.npz",
+    "loss_plot": "./thesis_gold_run/seed=42/A2_balanced_degree/training_losses.png",
+    "comparison_plot": "./thesis_gold_run/seed=42/A2_balanced_degree/comparison.png"
+  }
+}
