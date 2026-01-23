@@ -1,0 +1,22 @@
+{
+  "test_id": "E2_exp_fading",
+  "seed": 314,
+  "n_points": 6129,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.018260737810331055,
+    "test_accuracy": 0.9713
+  },
+  "solve": {
+    "dpo_steps_to_goal": -1,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "thesis_gold_run/seed=314/E2_exp_fading/positions.parquet",
+    "preferences": "thesis_gold_run/seed=314/E2_exp_fading/preferences.parquet",
+    "model": "thesis_gold_run/seed=314/E2_exp_fading/best_dpo_policy.pth",
+    "norm_stats": "thesis_gold_run/seed=314/E2_exp_fading/norm_stats.npz",
+    "loss_plot": "thesis_gold_run/seed=314/E2_exp_fading/training_losses.png",
+    "comparison_plot": "thesis_gold_run/seed=314/E2_exp_fading/comparison.png"
+  }
+}

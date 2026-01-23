@@ -1,0 +1,22 @@
+{
+  "test_id": "G1_tube_sampling",
+  "seed": 7,
+  "n_points": 4129,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.01926914843011506,
+    "test_accuracy": 0.9764
+  },
+  "solve": {
+    "dpo_steps_to_goal": 29,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "thesis_gold_run/seed=7/G1_tube_sampling/positions.parquet",
+    "preferences": "thesis_gold_run/seed=7/G1_tube_sampling/preferences.parquet",
+    "model": "thesis_gold_run/seed=7/G1_tube_sampling/best_dpo_policy.pth",
+    "norm_stats": "thesis_gold_run/seed=7/G1_tube_sampling/norm_stats.npz",
+    "loss_plot": "thesis_gold_run/seed=7/G1_tube_sampling/training_losses.png",
+    "comparison_plot": "thesis_gold_run/seed=7/G1_tube_sampling/comparison.png"
+  }
+}

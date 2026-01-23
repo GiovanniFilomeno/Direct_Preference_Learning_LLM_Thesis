@@ -1,0 +1,22 @@
+{
+  "test_id": "O1_ood_goal",
+  "seed": 19,
+  "n_points": 4080,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.02328896447073055,
+    "test_accuracy": 0.9687
+  },
+  "solve": {
+    "dpo_steps_to_goal": 31,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "thesis_gold_run/seed=19/O1_ood_goal/positions.parquet",
+    "preferences": "thesis_gold_run/seed=19/O1_ood_goal/preferences.parquet",
+    "model": "thesis_gold_run/seed=19/O1_ood_goal/best_dpo_policy.pth",
+    "norm_stats": "thesis_gold_run/seed=19/O1_ood_goal/norm_stats.npz",
+    "loss_plot": "thesis_gold_run/seed=19/O1_ood_goal/training_losses.png",
+    "comparison_plot": "thesis_gold_run/seed=19/O1_ood_goal/comparison.png"
+  }
+}

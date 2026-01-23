@@ -1,0 +1,22 @@
+{
+  "test_id": "D2_dropout_heavy",
+  "seed": 7,
+  "n_points": 4080,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.04594512356893171,
+    "test_accuracy": 0.9279
+  },
+  "solve": {
+    "dpo_steps_to_goal": 28,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "thesis_gold_run/seed=7/D2_dropout_heavy/positions.parquet",
+    "preferences": "thesis_gold_run/seed=7/D2_dropout_heavy/preferences.parquet",
+    "model": "thesis_gold_run/seed=7/D2_dropout_heavy/best_dpo_policy.pth",
+    "norm_stats": "thesis_gold_run/seed=7/D2_dropout_heavy/norm_stats.npz",
+    "loss_plot": "thesis_gold_run/seed=7/D2_dropout_heavy/training_losses.png",
+    "comparison_plot": "thesis_gold_run/seed=7/D2_dropout_heavy/comparison.png"
+  }
+}
