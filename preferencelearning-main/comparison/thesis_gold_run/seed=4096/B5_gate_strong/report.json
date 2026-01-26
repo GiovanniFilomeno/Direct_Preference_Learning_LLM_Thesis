@@ -1,0 +1,22 @@
+{
+  "test_id": "B5_gate_strong",
+  "seed": 4096,
+  "n_points": 4080,
+  "n_pairs": 200000,
+  "training": {
+    "best_val": 0.035221490089463285,
+    "test_accuracy": 0.9527
+  },
+  "solve": {
+    "dpo_steps_to_goal": -1,
+    "baseline_steps_to_goal": 29
+  },
+  "paths": {
+    "positions": "thesis_gold_run/seed=4096/B5_gate_strong/positions.parquet",
+    "preferences": "thesis_gold_run/seed=4096/B5_gate_strong/preferences.parquet",
+    "model": "thesis_gold_run/seed=4096/B5_gate_strong/best_dpo_policy.pth",
+    "norm_stats": "thesis_gold_run/seed=4096/B5_gate_strong/norm_stats.npz",
+    "loss_plot": "thesis_gold_run/seed=4096/B5_gate_strong/training_losses.png",
+    "comparison_plot": "thesis_gold_run/seed=4096/B5_gate_strong/comparison.png"
+  }
+}
